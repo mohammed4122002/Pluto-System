@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { adminSupabase } from "@/lib/supabase/admin";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { PLANS } from "@/lib/pricing";
 import type { Plan } from "@/types";
 
@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("subscriptions")
     .select("*, clinic:clinics(name)")
     .order("created_at", { ascending: false });
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   const expires = new Date(starts_at);
   expires.setMonth(expires.getMonth() + planInfo.months);
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("subscriptions")
     .insert({
       clinic_id,

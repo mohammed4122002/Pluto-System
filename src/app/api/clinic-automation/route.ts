@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { adminSupabase } from "@/lib/supabase/admin";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "clinic_id is required" }, { status: 400 });
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinic_automation")
     .insert({ clinic_id, ...automation })
     .select()

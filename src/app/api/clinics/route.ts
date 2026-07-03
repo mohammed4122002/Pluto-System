@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { adminSupabase } from "@/lib/supabase/admin";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export async function GET() {
   const auth = await requireOwner();
@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinics")
     .select("*")
     .order("created_at", { ascending: false });
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinics")
     .insert({ name, doctor_name, specialty, city, address, phone, clinic_key })
     .select()

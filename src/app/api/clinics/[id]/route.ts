@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { adminSupabase } from "@/lib/supabase/admin";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -12,7 +12,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinics")
     .select(
       "*, channels:clinic_channels(*), db_config:clinic_db_config(*), automation:clinic_automation(*), subscription:subscriptions(*)"
@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
   const body = await request.json();
 
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinics")
     .update({ ...body, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -57,7 +57,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const { error } = await adminSupabase.from("clinics").delete().eq("id", id);
+  const { error } = await getAdminSupabase().from("clinics").delete().eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

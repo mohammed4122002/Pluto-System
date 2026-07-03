@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { adminSupabase } from "@/lib/supabase/admin";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -12,7 +12,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const { data, error } = await adminSupabase
+  const { data, error } = await getAdminSupabase()
     .from("clinics")
     .update({ status: "suspended", updated_at: new Date().toISOString() })
     .eq("id", id)
