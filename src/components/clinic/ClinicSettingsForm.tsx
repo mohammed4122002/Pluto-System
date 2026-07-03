@@ -1,0 +1,112 @@
+"use client";
+
+import { useTransition } from "react";
+import { toast } from "sonner";
+
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { updateAutomation } from "@/app/clinic/[clinicId]/settings/actions";
+import type { ClinicAutomation } from "@/types";
+
+export function ClinicSettingsForm({
+  clinicId,
+  automation,
+}: {
+  clinicId: string;
+  automation: ClinicAutomation | null;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await updateAutomation(clinicId, formData);
+        toast.success("تم حفظ الإعدادات");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
+      }
+    });
+  }
+
+  return (
+    <form action={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="reminder_hours_before">ساعات التذكير قبل الموعد</Label>
+          <Input
+            id="reminder_hours_before"
+            name="reminder_hours_before"
+            type="number"
+            defaultValue={automation?.reminder_hours_before ?? 2}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="rating_delay_hours">ساعات طلب التقييم بعد الموعد</Label>
+          <Input
+            id="rating_delay_hours"
+            name="rating_delay_hours"
+            type="number"
+            defaultValue={automation?.rating_delay_hours ?? 1}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="reminder_message_ar">نص رسالة التذكير</Label>
+        <textarea
+          id="reminder_message_ar"
+          name="reminder_message_ar"
+          rows={3}
+          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          defaultValue={automation?.reminder_message_ar ?? ""}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="rating_message_ar">نص رسالة طلب التقييم</Label>
+        <textarea
+          id="rating_message_ar"
+          name="rating_message_ar"
+          rows={3}
+          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          defaultValue={automation?.rating_message_ar ?? ""}
+        />
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="rating_enabled"
+          defaultChecked={automation?.rating_enabled ?? true}
+        />
+        تفعيل طلب التقييم
+      </label>
+
+      <div className="grid grid-cols-2 gap-4 max-w-sm">
+        <div className="space-y-2">
+          <Label htmlFor="working_hours_start">من</Label>
+          <Input
+            id="working_hours_start"
+            name="working_hours_start"
+            type="time"
+            defaultValue={automation?.working_hours_start ?? "08:00"}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="working_hours_end">إلى</Label>
+          <Input
+            id="working_hours_end"
+            name="working_hours_end"
+            type="time"
+            defaultValue={automation?.working_hours_end ?? "20:00"}
+          />
+        </div>
+      </div>
+
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+      </Button>
+    </form>
+  );
+}
