@@ -11,3 +11,9 @@ CREATE TABLE wa_sessions (
 );
 
 CREATE UNIQUE INDEX ON wa_sessions(clinic_id, patient_phone);
+
+-- n8n accesses this table with the service key (bypasses RLS);
+-- dashboard users have no business reading raw session state.
+ALTER TABLE wa_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner_all" ON wa_sessions FOR ALL
+  USING (app_is_owner());
