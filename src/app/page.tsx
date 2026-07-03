@@ -12,11 +12,25 @@ import {
   Star,
   Users,
   Zap,
+  Server,
+  Sheet,
+  Workflow,
+  Wallet,
+  Stethoscope,
+  TrendingUp,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PLANS } from "@/lib/pricing";
+
+const INTEGRATIONS = [
+  { icon: MessageCircle, label: "WhatsApp Business" },
+  { icon: Database, label: "Supabase" },
+  { icon: Workflow, label: "n8n" },
+  { icon: Server, label: "SQL Server" },
+  { icon: Sheet, label: "Google Sheets" },
+];
 
 const features = [
   {
@@ -260,6 +274,28 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ===== Integrations trust bar ===== */}
+        <section className="border-y border-border/60 bg-card/40">
+          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+            <p className="mb-4 text-center text-xs font-medium text-muted-foreground">
+              يعمل مع الأدوات التي تستخدمها عيادتك بالفعل
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+              {INTEGRATIONS.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center gap-2 text-muted-foreground/80 grayscale transition-all hover:text-foreground hover:grayscale-0"
+                >
+                  <item.icon className="size-4" />
+                  <span className="text-sm font-medium" dir="ltr">
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ===== Stats strip ===== */}
         <section className="border-y border-border/60 bg-muted/40">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-4 py-10 text-center sm:px-6 md:grid-cols-4">
@@ -278,6 +314,108 @@ export default function LandingPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ===== Dashboard preview ===== */}
+        <section className="scroll-mt-20">
+          <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
+            <div className="grid items-center gap-14 lg:grid-cols-2">
+              <div className="order-2 text-center lg:order-1 lg:text-start">
+                <Badge
+                  variant="outline"
+                  className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-700"
+                >
+                  لوحة التحكم
+                </Badge>
+                <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  كل تفاصيل عيادتك في شاشة واحدة
+                </h2>
+                <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+                  إيراد شهري، تذكيرات اليوم، تقييمات المرضى، وسجل تنفيذ كل
+                  رسالة — بتحديث لحظي وبدون الحاجة لفتح واتساب أو ملف إكسل.
+                </p>
+                <ul className="mt-6 space-y-3 text-sm">
+                  {[
+                    "نظرة عامة فورية على أداء كل عيادة",
+                    "تنبيهات تلقائية عند اقتراب انتهاء الاشتراك",
+                    "سجل كامل لكل رسالة أُرسلت ونتيجتها",
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-center justify-center gap-2.5 lg:justify-start"
+                    >
+                      <Check className="size-4 shrink-0 text-emerald-600" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="relative order-1 lg:order-2">
+                <div
+                  aria-hidden
+                  className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-200/50 via-teal-100/30 to-transparent blur-2xl"
+                />
+                <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-emerald-900/10">
+                  <div className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-4 py-2.5">
+                    <span className="size-2.5 rounded-full bg-destructive/50" />
+                    <span className="size-2.5 rounded-full bg-warning/50" />
+                    <span className="size-2.5 rounded-full bg-success/50" />
+                  </div>
+                  <div className="space-y-4 p-5">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { icon: Stethoscope, label: "العيادات النشطة", value: "١٢" },
+                        { icon: Wallet, label: "الإيراد الشهري", value: "٤٬٤٨٠ ر.س" },
+                        { icon: BellRing, label: "تذكيرات اليوم", value: "٣٨" },
+                        { icon: Star, label: "متوسط التقييم", value: "٤.٩" },
+                      ].map((kpi) => (
+                        <div
+                          key={kpi.label}
+                          className="rounded-xl border border-border bg-background p-3"
+                        >
+                          <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <kpi.icon className="size-4" />
+                          </span>
+                          <p dir="ltr" className="mt-2 text-end text-lg font-extrabold">
+                            {kpi.value}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-xl border border-border bg-background p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          النشاط الأخير
+                        </p>
+                        <TrendingUp className="size-3.5 text-success" />
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          { clinic: "عيادة الشفاء", type: "تذكير موعد", ok: true },
+                          { clinic: "مركز النور", type: "طلب تقييم", ok: true },
+                          { clinic: "عيادة د. أحمد", type: "تذكير موعد", ok: true },
+                        ].map((row, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between text-xs"
+                          >
+                            <span className="font-medium">{row.clinic}</span>
+                            <span className="text-muted-foreground">{row.type}</span>
+                            <Badge variant="success" className="h-5">
+                              نجاح
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
