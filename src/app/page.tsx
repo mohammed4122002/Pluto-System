@@ -98,25 +98,34 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* ===== Navbar ===== */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/70 shadow-[0_1px_0_0_rgba(0,0,0,0.02)] backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-brand ring-inset-highlight transition-transform group-hover:scale-105">
               <MessageCircle className="size-5" />
             </span>
             <span className="text-lg font-extrabold tracking-tight">
-              MediSync <span className="text-emerald-600">AI</span>
+              MediSync <span className="text-primary">AI</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-            <a href="#features" className="transition-colors hover:text-foreground">
+          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 p-1 text-sm font-medium text-muted-foreground md:flex">
+            <a
+              href="#features"
+              className="rounded-full px-4 py-1.5 transition-colors hover:bg-background hover:text-foreground hover:shadow-brand-sm"
+            >
               المميزات
             </a>
-            <a href="#how" className="transition-colors hover:text-foreground">
+            <a
+              href="#how"
+              className="rounded-full px-4 py-1.5 transition-colors hover:bg-background hover:text-foreground hover:shadow-brand-sm"
+            >
               كيف تعمل
             </a>
-            <a href="#pricing" className="transition-colors hover:text-foreground">
+            <a
+              href="#pricing"
+              className="rounded-full px-4 py-1.5 transition-colors hover:bg-background hover:text-foreground hover:shadow-brand-sm"
+            >
               الأسعار
             </a>
           </nav>
@@ -125,10 +134,7 @@ export default function LandingPage() {
             <Button asChild variant="ghost" className="text-muted-foreground">
               <Link href="/login">دخول العيادات</Link>
             </Button>
-            <Button
-              asChild
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-            >
+            <Button asChild>
               <Link href="/login">ابدأ الآن</Link>
             </Button>
           </div>
@@ -140,21 +146,25 @@ export default function LandingPage() {
         <section className="relative overflow-hidden">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(16,185,129,0.10),transparent)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(16,185,129,0.12),transparent)]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),transparent)]"
           />
           <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:pt-24">
             <div className="text-center lg:text-start">
               <Badge
                 variant="outline"
-                className="mb-5 gap-1.5 border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700"
+                className="mb-6 gap-1.5 border-emerald-200/70 bg-gradient-to-b from-emerald-50 to-emerald-50/50 px-3.5 py-1.5 text-emerald-700 shadow-brand-sm dark:border-emerald-800/40 dark:from-emerald-950/40 dark:text-emerald-300"
               >
-                <Zap className="size-3.5" />
+                <Zap className="size-3.5 fill-emerald-500 text-emerald-500" />
                 أتمتة واتساب للعيادات — بدون أي جهد تقني
               </Badge>
 
-              <h1 className="text-balance text-4xl font-extrabold leading-[1.15] tracking-tight sm:text-5xl">
+              <h1 className="text-balance text-4xl font-extrabold leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.4rem]">
                 عيادتك تتواصل مع مرضاها
-                <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-l from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                   {" "}
                   تلقائياً
                 </span>
@@ -166,23 +176,14 @@ export default function LandingPage() {
                 مرضاك.
               </p>
 
-              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start sm:justify-center">
-                <Button
-                  asChild
-                  size="lg"
-                  className="h-12 gap-2 bg-emerald-600 px-7 text-base text-white hover:bg-emerald-700"
-                >
+              <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:justify-start sm:justify-center">
+                <Button asChild size="lg" className="gap-2">
                   <Link href="/login">
                     ابدأ تجربتك المجانية
                     <ArrowLeft className="size-4" />
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="h-12 px-7 text-base"
-                >
+                <Button asChild size="lg" variant="outline">
                   <a href="#pricing">شاهد الأسعار</a>
                 </Button>
               </div>
@@ -207,9 +208,9 @@ export default function LandingPage() {
             <div className="relative mx-auto w-full max-w-sm">
               <div
                 aria-hidden
-                className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-200/60 via-teal-100/40 to-transparent blur-2xl"
+                className="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-emerald-200/70 via-teal-100/50 to-transparent blur-3xl"
               />
-              <div className="relative rounded-[2rem] border border-border bg-card p-3 shadow-2xl shadow-emerald-900/10">
+              <div className="relative rounded-[2rem] border border-border/60 bg-card p-3 shadow-brand-lg ring-inset-highlight">
                 <div className="rounded-[1.5rem] bg-[#e5ddd5] p-3 dark:bg-neutral-800">
                   {/* chat header */}
                   <div className="mb-3 flex items-center gap-3 rounded-xl bg-[#075e54] px-4 py-3 text-white">
@@ -256,8 +257,8 @@ export default function LandingPage() {
                 </div>
 
                 {/* floating stat card */}
-                <div className="absolute -bottom-5 -start-5 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <div className="absolute -bottom-6 -start-6 flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-brand-lg ring-inset-highlight">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-brand-sm">
                     <Star className="size-5 fill-current" />
                   </span>
                   <div className="leading-tight">
@@ -357,7 +358,7 @@ export default function LandingPage() {
                   aria-hidden
                   className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-emerald-200/50 via-teal-100/30 to-transparent blur-2xl"
                 />
-                <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-emerald-900/10">
+                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-brand-lg ring-inset-highlight">
                   <div className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-4 py-2.5">
                     <span className="size-2.5 rounded-full bg-destructive/50" />
                     <span className="size-2.5 rounded-full bg-warning/50" />
@@ -442,9 +443,9 @@ export default function LandingPage() {
               {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/5"
+                  className="group rounded-2xl border border-border/70 bg-card p-6 shadow-brand-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/25 hover:shadow-brand"
                 >
-                  <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
+                  <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-brand-sm transition-all duration-200 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-teal-600 group-hover:text-white group-hover:shadow-brand">
                     <feature.icon className="size-5" />
                   </span>
                   <h3 className="mb-2 text-lg font-bold">{feature.title}</h3>
@@ -524,12 +525,12 @@ export default function LandingPage() {
                     key={key}
                     className={
                       highlighted
-                        ? "relative rounded-2xl border-2 border-emerald-500 bg-card p-7 shadow-xl shadow-emerald-500/10"
-                        : "relative rounded-2xl border border-border bg-card p-7"
+                        ? "relative rounded-2xl border border-primary/30 bg-card p-7 shadow-brand-lg ring-2 ring-primary/15 md:-my-3 md:scale-105"
+                        : "relative rounded-2xl border border-border/70 bg-card p-7 shadow-brand-sm transition-shadow hover:shadow-brand"
                     }
                   >
                     {highlighted && (
-                      <Badge className="absolute -top-3 start-6 bg-emerald-600 text-white">
+                      <Badge className="absolute -top-3.5 start-1/2 -translate-x-1/2 md:start-6 md:translate-x-0">
                         ⭐ {plan.badge}
                       </Badge>
                     )}
@@ -575,11 +576,7 @@ export default function LandingPage() {
 
                     <Button
                       asChild
-                      className={
-                        highlighted
-                          ? "mt-7 w-full bg-emerald-600 text-white hover:bg-emerald-700"
-                          : "mt-7 w-full"
-                      }
+                      className="mt-7 w-full"
                       variant={highlighted ? "default" : "outline"}
                     >
                       <Link href="/login">اشترك الآن</Link>

@@ -20,16 +20,16 @@ export function KpiCard({
   tone?: "default" | "success" | "warning" | "destructive";
 }) {
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+    <Card className="overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-brand">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div
             className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-xl",
-              tone === "success" && "bg-success/15 text-success",
-              tone === "warning" && "bg-warning/15 text-warning",
-              tone === "destructive" && "bg-destructive/15 text-destructive",
-              tone === "default" && "bg-primary/10 text-primary"
+              "flex size-11 shrink-0 items-center justify-center rounded-xl shadow-brand-sm ring-inset-highlight",
+              tone === "success" && "bg-gradient-to-br from-success/90 to-success text-white",
+              tone === "warning" && "bg-gradient-to-br from-warning/90 to-warning text-white",
+              tone === "destructive" && "bg-gradient-to-br from-destructive/90 to-destructive text-white",
+              tone === "default" && "bg-gradient-to-br from-primary/90 to-primary text-primary-foreground"
             )}
           >
             <Icon className="size-5" />

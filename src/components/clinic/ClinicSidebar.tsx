@@ -56,9 +56,9 @@ export function ClinicSidebar() {
   const initial = displayName.trim().charAt(0) || "ع";
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-e border-border bg-card">
-      <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-500/30">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-e border-border/70 bg-card">
+      <div className="flex h-16 items-center gap-2.5 border-b border-border/70 px-5">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-brand ring-inset-highlight">
           <MessageCircle className="size-4" />
         </span>
         <div className="leading-tight">
@@ -78,14 +78,14 @@ export function ClinicSidebar() {
               key={item.href}
               href={href}
               className={cn(
-                "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-gradient-to-b from-primary/12 to-primary/5 text-primary shadow-brand-sm"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
               {isActive && (
-                <span className="absolute inset-y-1 start-0 w-0.5 rounded-full bg-primary" />
+                <span className="absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-gradient-to-b from-emerald-500 to-teal-600" />
               )}
               <item.icon className="size-4 shrink-0" />
               {item.label}
@@ -94,10 +94,10 @@ export function ClinicSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border/70 p-3">
         <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
-          <Avatar className="size-9 border border-border">
-            <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
+          <Avatar className="size-9 shadow-brand-sm ring-1 ring-border">
+            <AvatarFallback className="bg-gradient-to-br from-primary/90 to-primary text-sm font-bold text-primary-foreground">
               {initial}
             </AvatarFallback>
           </Avatar>
