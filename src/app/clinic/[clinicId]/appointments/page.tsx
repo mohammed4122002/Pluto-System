@@ -59,7 +59,11 @@ export default async function ClinicAppointmentsPage({
               </TableHeader>
               <TableBody>
                 {appointments.map((appointment) => (
-                  <AppointmentRow key={appointment.id} appointment={appointment} />
+                  <AppointmentRow
+                    key={appointment.id}
+                    clinicId={clinicId}
+                    appointment={appointment}
+                  />
                 ))}
               </TableBody>
             </Table>

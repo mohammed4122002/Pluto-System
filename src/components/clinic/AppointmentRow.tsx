@@ -1,5 +1,6 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ReminderStatusBadge, type ReminderStatus } from "@/components/clinic/ReminderStatusBadge";
+import { AppointmentActionsMenu } from "@/components/clinic/AppointmentActionsMenu";
 import type { Appointment } from "@/types";
 
 function reminderStatusOf(appointment: Appointment): ReminderStatus {
@@ -9,11 +10,17 @@ function reminderStatusOf(appointment: Appointment): ReminderStatus {
 }
 
 export function AppointmentRow({
+  clinicId,
   appointment,
   actions,
+  readOnly = false,
 }: {
+  clinicId: string;
   appointment: Appointment;
+  /** Extra content (e.g. a "view all" link) rendered before the actions menu. */
   actions?: React.ReactNode;
+  /** Hide the edit/status actions menu — used for the doctor's read-only view. */
+  readOnly?: boolean;
 }) {
   const time = new Intl.DateTimeFormat("ar-SA", { timeStyle: "short" }).format(
     new Date(appointment.appointment_time)
@@ -42,7 +49,14 @@ export function AppointmentRow({
           }
         />
       </TableCell>
-      <TableCell>{actions}</TableCell>
+      <TableCell>
+        <div className="flex items-center justify-end gap-2">
+          {actions}
+          {!readOnly && (
+            <AppointmentActionsMenu clinicId={clinicId} appointment={appointment} />
+          )}
+        </div>
+      </TableCell>
     </TableRow>
   );
 }

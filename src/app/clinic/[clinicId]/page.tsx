@@ -107,7 +107,9 @@ export default async function ClinicTodayPage({
                 {appointments.map((appointment) => (
                   <AppointmentRow
                     key={appointment.id}
+                    clinicId={clinicId}
                     appointment={appointment}
+                    readOnly={role === "doctor"}
                     actions={
                       role !== "doctor" ? (
                         <Link

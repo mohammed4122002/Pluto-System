@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -23,6 +24,15 @@ interface SubscriptionRow {
   clinic: { name: string } | null;
 }
 
+const STATUS_LABEL_AR: Record<
+  SubscriptionRow["status"],
+  { label: string; variant: "success" | "destructive" | "secondary" }
+> = {
+  active: { label: "نشط", variant: "success" },
+  expired: { label: "منتهي", variant: "destructive" },
+  cancelled: { label: "ملغى", variant: "secondary" },
+};
+
 export default async function SubscriptionsPage() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -31,6 +41,8 @@ export default async function SubscriptionsPage() {
     .order("expires_at", { ascending: true });
 
   const subscriptions = (data ?? []) as unknown as SubscriptionRow[];
+  const in7Days = new Date();
+  in7Days.setDate(in7Days.getDate() + 7);
 
   return (
     <div className="space-y-6">
@@ -54,19 +66,34 @@ export default async function SubscriptionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subscriptions.map((sub) => (
-                  <TableRow key={sub.id}>
-                    <TableCell>{sub.clinic?.name ?? "—"}</TableCell>
-                    <TableCell>{PLANS[sub.plan].label}</TableCell>
-                    <TableCell dir="ltr" className="text-end">
-                      {sub.price_sar} ر.س
-                    </TableCell>
-                    <TableCell dir="ltr" className="text-end">
-                      {sub.expires_at}
-                    </TableCell>
-                    <TableCell>{sub.status}</TableCell>
-                  </TableRow>
-                ))}
+                {subscriptions.map((sub) => {
+                  const expiresAt = new Date(sub.expires_at);
+                  const isExpiringSoon =
+                    sub.status === "active" && expiresAt <= in7Days;
+                  return (
+                    <TableRow key={sub.id}>
+                      <TableCell className="font-medium">
+                        {sub.clinic?.name ?? "—"}
+                      </TableCell>
+                      <TableCell>{PLANS[sub.plan].label}</TableCell>
+                      <TableCell dir="ltr" className="text-end">
+                        {sub.price_sar} ر.س
+                      </TableCell>
+                      <TableCell dir="ltr" className="text-end">
+                        <span className={isExpiringSoon ? "text-warning" : undefined}>
+                          {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
+                            expiresAt
+                          )}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={STATUS_LABEL_AR[sub.status].variant}>
+                          {STATUS_LABEL_AR[sub.status].label}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
