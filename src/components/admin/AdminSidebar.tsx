@@ -24,6 +24,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ChangePasswordDialog } from "@/components/shared/ChangePasswordDialog";
 
 const NAV_GROUPS = [
   {
@@ -124,6 +125,7 @@ export function AdminSidebar() {
               {user?.email ?? ""}
             </p>
           </div>
+          <ChangePasswordDialog />
           <Tooltip>
             <TooltipTrigger asChild>
               <button

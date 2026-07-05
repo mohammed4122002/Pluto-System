@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClinicSettingsForm } from "@/components/clinic/ClinicSettingsForm";
@@ -10,6 +11,7 @@ export default async function ClinicSettingsPage({
   params: Promise<{ clinicId: string }>;
 }) {
   const { clinicId } = await params;
+  await requireClinicRole(clinicId, ["manager"]);
   const supabase = await createClient();
   const { data } = await supabase
     .from("clinic_automation")

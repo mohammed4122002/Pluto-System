@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ export default async function RemindersLogPage({
   params: Promise<{ clinicId: string }>;
 }) {
   const { clinicId } = await params;
+  await requireClinicRole(clinicId, ["manager", "secretary"]);
   const supabase = await createClient();
   const { data } = await supabase
     .from("n8n_execution_log")

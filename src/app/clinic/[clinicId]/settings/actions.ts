@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 
 export async function updateAutomation(clinicId: string, formData: FormData) {
+  await requireClinicRole(clinicId, ["manager"]);
   const supabase = await createClient();
 
   const { error } = await supabase

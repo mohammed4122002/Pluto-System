@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChangePasswordDialog } from "@/components/shared/ChangePasswordDialog";
 import type { UserRole } from "@/types";
 
 const NAV_ITEMS: { href: string; label: string; icon: typeof CalendarClock; roles: UserRole[] }[] = [
@@ -107,6 +108,7 @@ export function ClinicSidebar() {
               {user?.email ?? ""}
             </p>
           </div>
+          <ChangePasswordDialog />
           <Tooltip>
             <TooltipTrigger asChild>
               <button

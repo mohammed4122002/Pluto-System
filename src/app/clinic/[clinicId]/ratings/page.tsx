@@ -1,4 +1,5 @@
 import { getClinicReviews, getClinicWithDbConfig } from "@/lib/clinic-data";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RatingStars } from "@/components/clinic/RatingStars";
@@ -53,6 +54,7 @@ export default async function ClinicRatingsPage({
   params: Promise<{ clinicId: string }>;
 }) {
   const { clinicId } = await params;
+  await requireClinicRole(clinicId, ["manager", "doctor"]);
   const clinic = await getClinicWithDbConfig(clinicId);
   const reviews = await getClinicReviews(clinic?.db_config ?? null);
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getClinicAppointments, getClinicWithDbConfig } from "@/lib/clinic-data";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AppointmentRow } from "@/components/clinic/AppointmentRow";
@@ -20,6 +21,7 @@ export default async function ClinicAppointmentsPage({
   params: Promise<{ clinicId: string }>;
 }) {
   const { clinicId } = await params;
+  await requireClinicRole(clinicId, ["manager", "secretary"]);
   const clinic = await getClinicWithDbConfig(clinicId);
   const appointments = await getClinicAppointments(clinic?.db_config ?? null);
 

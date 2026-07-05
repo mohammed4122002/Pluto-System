@@ -4,8 +4,10 @@ import { redirect } from "next/navigation";
 
 import { getClinicWithDbConfig } from "@/lib/clinic-data";
 import { createClinicSupabaseClient } from "@/lib/db-adapters/supabase";
+import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 
 export async function createAppointment(clinicId: string, formData: FormData) {
+  await requireClinicRole(clinicId, ["manager", "secretary"]);
   const clinic = await getClinicWithDbConfig(clinicId);
 
   if (!clinic?.db_config || clinic.db_config.db_type !== "supabase") {
