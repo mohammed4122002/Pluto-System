@@ -19,14 +19,21 @@ export default async function ClinicDetailPage({
   const { data: clinic } = await supabase
     .from("clinics")
     .select(
-      "*, channels:clinic_channels(*), db_config:clinic_db_config(*), automation:clinic_automation(*), subscription:subscriptions(*)"
+      "*, channels:clinic_channels(*), db_config:clinic_db_config(*), automation:clinic_automation(*), subscriptions(*)"
     )
     .eq("id", id)
+    .order("created_at", { referencedTable: "subscriptions", ascending: false })
     .single();
 
   if (!clinic) notFound();
 
-  const typedClinic = clinic as Clinic;
+  // a clinic can have multiple subscription rows over time (renewals,
+  // plan changes) — the most recent one is the "current" subscription.
+  const { subscriptions, ...clinicFields } = clinic as Clinic & {
+    subscriptions: import("@/types").Subscription[] | null;
+  };
+  const typedClinic = clinicFields as Clinic;
+  const currentSubscription = subscriptions?.[0] ?? null;
 
   const { data: staff } = await supabase
     .from("platform_users")
@@ -69,15 +76,15 @@ export default async function ClinicDetailPage({
             <CardTitle className="text-base">الاشتراك</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {typedClinic.subscription ? (
+            {currentSubscription ? (
               <>
-                <InfoRow label="الخطة" value={typedClinic.subscription.plan} />
+                <InfoRow label="الخطة" value={currentSubscription.plan} />
                 <InfoRow
                   label="السعر"
-                  value={`${typedClinic.subscription.price_sar} ر.س`}
+                  value={`${currentSubscription.price_sar} ر.س`}
                   dir="ltr"
                 />
-                <InfoRow label="ينتهي في" value={typedClinic.subscription.expires_at} dir="ltr" />
+                <InfoRow label="ينتهي في" value={currentSubscription.expires_at} dir="ltr" />
               </>
             ) : (
               <p className="text-muted-foreground">لا يوجد اشتراك مسجّل</p>
