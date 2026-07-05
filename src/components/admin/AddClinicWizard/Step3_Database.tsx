@@ -180,16 +180,20 @@ export function Step3_Database({ data, update }: StepProps) {
                 <Input
                   dir="ltr"
                   placeholder="https://docs.google.com/spreadsheets/d/..."
+                  defaultValue={
+                    dbConfig.gs_spreadsheet_id
+                      ? `https://docs.google.com/spreadsheets/d/${dbConfig.gs_spreadsheet_id}`
+                      : ""
+                  }
                   onChange={(e) => {
                     const match = e.target.value.match(/\/d\/([a-zA-Z0-9-_]+)/);
                     patchDb({ gs_spreadsheet_id: match?.[1] ?? e.target.value });
                   }}
                 />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Button type="button" variant="outline">
-                  ربط حساب Google
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  شارك الشيت (صلاحية تحرير) مع بريد حساب Google الخاص بالمنصة، وتأكد أن
+                  التبويبات مسمّاة بالضبط: Appointments، Patients، Reviews.
+                </p>
               </div>
             </>
           )}
