@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SubscriptionBadge } from "@/components/admin/SubscriptionBadge";
 import { ClinicActionsMenu } from "@/components/admin/ClinicActionsMenu";
+import { ClinicStaffManager } from "@/components/admin/ClinicStaffManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { Clinic } from "@/types";
@@ -26,6 +27,12 @@ export default async function ClinicDetailPage({
   if (!clinic) notFound();
 
   const typedClinic = clinic as Clinic;
+
+  const { data: staff } = await supabase
+    .from("platform_users")
+    .select("id, name, email, role, is_active, created_at")
+    .eq("clinic_id", id)
+    .order("created_at", { ascending: true });
 
   return (
     <div className="space-y-6">
@@ -115,6 +122,15 @@ export default async function ClinicDetailPage({
                     : "لم يُختبر بعد"
               }
             />
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">الموظفون</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ClinicStaffManager clinicId={id} initialStaff={staff ?? []} />
           </CardContent>
         </Card>
       </div>
