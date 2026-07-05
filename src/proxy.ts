@@ -33,6 +33,17 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // /api/* routes do their own auth check (requireOwner/requireClinicRole) and
+  // must return JSON on failure, not a redirect — this block only exists so
+  // that calling auth.getUser() above refreshes the session and persists the
+  // renewed cookies (via setAll) onto the response before the route handler
+  // reads them. Without this, API routes never pass through proxy.ts (the
+  // matcher used to exclude /api entirely) and could see a stale/expired
+  // access token even though page navigations kept the session alive.
+  if (path.startsWith("/api")) {
+    return response;
+  }
+
   if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -64,5 +75,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/clinic/:path*"],
+  matcher: ["/admin/:path*", "/clinic/:path*", "/api/:path*"],
 };
