@@ -23,6 +23,7 @@ export function Step2_Channels({ data, update }: StepProps) {
   const [guideOpen, setGuideOpen] = useState(false);
 
   const whatsapp = data.channels.find((c) => c.channel === "whatsapp");
+  const telegram = data.channels.find((c) => c.channel === "telegram");
   const whatsappEnabled = Boolean(whatsapp);
   const noChannelSelected = data.channels.length === 0;
 
@@ -213,21 +214,17 @@ export function Step2_Channels({ data, update }: StepProps) {
                     ) : null}
                   </>
                 ) : channel === "telegram" ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Bot Token</Label>
-                      <Input
-                        dir="ltr"
-                        onChange={(e) => patchChannel(channel, { tg_bot_token: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Chat ID</Label>
-                      <Input
-                        dir="ltr"
-                        onChange={(e) => patchChannel(channel, { tg_chat_id: e.target.value })}
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Bot Token</Label>
+                    <Input
+                      dir="ltr"
+                      value={telegram?.tg_bot_token ?? ""}
+                      onChange={(e) => patchChannel(channel, { tg_bot_token: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      من BotFather. لا حاجة لأي معرّف محادثة (Chat ID) — كل مريض يُربط
+                      تلقائياً بمحادثته بعد إرسال /start ومشاركة رقم هاتفه للبوت.
+                    </p>
                   </div>
                 ) : channel === "messenger" ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
