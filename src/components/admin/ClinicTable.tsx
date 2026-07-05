@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SubscriptionBadge } from "@/components/admin/SubscriptionBadge";
+import { ClinicActionsMenu } from "@/components/admin/ClinicActionsMenu";
 import { EmptyState } from "@/components/shared/EmptyState";
 import type { Clinic } from "@/types";
 
@@ -31,6 +32,7 @@ export function ClinicTable({ clinics }: { clinics: Clinic[] }) {
           <TableHead>المدينة</TableHead>
           <TableHead>الحالة</TableHead>
           <TableHead>تاريخ الإضافة</TableHead>
+          <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -50,6 +52,13 @@ export function ClinicTable({ clinics }: { clinics: Clinic[] }) {
               {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
                 new Date(clinic.created_at)
               )}
+            </TableCell>
+            <TableCell>
+              <ClinicActionsMenu
+                clinicId={clinic.id}
+                clinicName={clinic.name}
+                status={clinic.status}
+              />
             </TableCell>
           </TableRow>
         ))}

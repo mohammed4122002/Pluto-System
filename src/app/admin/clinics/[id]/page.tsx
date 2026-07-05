@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SubscriptionBadge } from "@/components/admin/SubscriptionBadge";
+import { ClinicActionsMenu } from "@/components/admin/ClinicActionsMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { Clinic } from "@/types";
@@ -31,7 +32,17 @@ export default async function ClinicDetailPage({
       <PageHeader
         title={typedClinic.name}
         description={typedClinic.doctor_name}
-        actions={<SubscriptionBadge status={typedClinic.status} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <SubscriptionBadge status={typedClinic.status} />
+            <ClinicActionsMenu
+              clinicId={typedClinic.id}
+              clinicName={typedClinic.name}
+              status={typedClinic.status}
+              redirectOnDelete="/admin/clinics"
+            />
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
