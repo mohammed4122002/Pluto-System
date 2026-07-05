@@ -39,6 +39,7 @@ export function AddClinicWizard() {
 
   function canProceed() {
     if (step === 0) return Boolean(data.name && data.doctor_name && data.clinic_key);
+    if (step === 1) return data.channels.length > 0;
     return true;
   }
 
