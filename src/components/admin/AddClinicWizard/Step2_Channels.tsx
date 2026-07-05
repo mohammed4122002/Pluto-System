@@ -20,6 +20,7 @@ const CHANNELS: { channel: Channel; label: string }[] = [
 
 export function Step2_Channels({ data, update }: StepProps) {
   const [testing, setTesting] = useState(false);
+  const [testingTelegram, setTestingTelegram] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
 
   const whatsapp = data.channels.find((c) => c.channel === "whatsapp");
@@ -70,6 +71,28 @@ export function Step2_Channels({ data, update }: StepProps) {
       toast.error(err instanceof Error ? err.message : "فشل الاختبار");
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function handleTestTelegramConnection() {
+    if (!telegram?.tg_bot_token) {
+      toast.error("أدخل Bot Token أولاً");
+      return;
+    }
+    setTestingTelegram(true);
+    try {
+      const res = await fetch("/api/telegram/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bot_token: telegram.tg_bot_token }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error ?? "فشل الاختبار");
+      toast.success(`رمز صالح ✅ البوت: @${json.bot.username}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "فشل الاختبار");
+    } finally {
+      setTestingTelegram(false);
     }
   }
 
@@ -225,6 +248,15 @@ export function Step2_Channels({ data, update }: StepProps) {
                       من BotFather. لا حاجة لأي معرّف محادثة (Chat ID) — كل مريض يُربط
                       تلقائياً بمحادثته بعد إرسال /start ومشاركة رقم هاتفه للبوت.
                     </p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleTestTelegramConnection}
+                      disabled={testingTelegram}
+                    >
+                      {testingTelegram ? <Loader2 className="size-4 animate-spin" /> : null}
+                      اختبار الاتصال
+                    </Button>
                   </div>
                 ) : channel === "messenger" ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
