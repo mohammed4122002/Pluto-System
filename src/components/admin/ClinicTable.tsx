@@ -54,11 +54,7 @@ export function ClinicTable({ clinics }: { clinics: Clinic[] }) {
               )}
             </TableCell>
             <TableCell>
-              <ClinicActionsMenu
-                clinicId={clinic.id}
-                clinicName={clinic.name}
-                status={clinic.status}
-              />
+              <ClinicActionsMenu clinic={clinic} />
             </TableCell>
           </TableRow>
         ))}

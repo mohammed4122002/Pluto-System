@@ -36,9 +36,7 @@ export default async function ClinicDetailPage({
           <div className="flex items-center gap-2">
             <SubscriptionBadge status={typedClinic.status} />
             <ClinicActionsMenu
-              clinicId={typedClinic.id}
-              clinicName={typedClinic.name}
-              status={typedClinic.status}
+              clinic={typedClinic}
               redirectOnDelete="/admin/clinics"
             />
           </div>
