@@ -26,7 +26,7 @@ import type { UserRole } from "@/types";
 
 const NAV_ITEMS: { href: string; label: string; icon: typeof CalendarClock; roles: UserRole[] }[] = [
   { href: "", label: "اليوم", icon: CalendarClock, roles: ["owner", "manager", "doctor", "secretary"] },
-  { href: "/conversations", label: "المحادثات", icon: MessagesSquare, roles: ["owner", "manager", "doctor", "secretary"] },
+  { href: "/conversations", label: "المحادثات", icon: MessagesSquare, roles: ["manager", "doctor", "secretary"] },
   { href: "/appointments", label: "المواعيد", icon: ClipboardList, roles: ["owner", "manager", "secretary"] },
   { href: "/patients", label: "المرضى", icon: Users, roles: ["owner", "manager", "secretary", "doctor"] },
   { href: "/reminders", label: "التذكيرات", icon: BellRing, roles: ["owner", "manager", "secretary"] },
@@ -55,7 +55,8 @@ export function ClinicSidebar() {
   // escalations from any page (not only when the inbox is open).
   const [attention, setAttention] = useState(0);
   useEffect(() => {
-    if (!params.clinicId) return;
+    // Owner can't read conversations, so don't poll the count for them.
+    if (!params.clinicId || role === "owner") return;
     let alive = true;
     const load = async () => {
       try {

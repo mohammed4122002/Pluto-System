@@ -56,6 +56,8 @@ export default async function AdminOverviewPage() {
     { count: remindersToday },
     { count: ratingRequestsThisWeek },
     { count: errorsLast24h },
+    { count: totalExec7d },
+    { count: errorsExec7d },
     { data: recentActivity },
   ] = await Promise.all([
     supabase.from("clinics").select("id, status"),
@@ -89,10 +91,27 @@ export default async function AdminOverviewPage() {
       .gte("executed_at", dayAgo.toISOString()),
     supabase
       .from("n8n_execution_log")
+      .select("id", { count: "exact", head: true })
+      .gte("executed_at", weekAgo.toISOString()),
+    supabase
+      .from("n8n_execution_log")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "error")
+      .gte("executed_at", weekAgo.toISOString()),
+    // Platform monitoring only — exclude patient conversation (webhook)
+    // events; the operator sees automation activity, never chat content.
+    supabase
+      .from("n8n_execution_log")
       .select("id, workflow, status, executed_at, error_msg, clinic:clinics(name)")
+      .neq("workflow", "webhook")
       .order("executed_at", { ascending: false })
       .limit(10),
   ]);
+
+  const successRate7d =
+    (totalExec7d ?? 0) > 0
+      ? Math.round((1 - (errorsExec7d ?? 0) / (totalExec7d ?? 1)) * 100)
+      : 100;
 
   const totalClinics = clinics?.length ?? 0;
   const activeClinics = clinics?.filter((c) => c.status === "active").length ?? 0;
@@ -193,10 +212,11 @@ export default async function AdminOverviewPage() {
           icon={BellRing}
         />
         <KpiCard
-          label="طلبات التقييم هذا الأسبوع"
-          value={ratingRequestsThisWeek ?? 0}
+          label="نجاح الأتمتة (7 أيام)"
+          value={`${successRate7d}%`}
           icon={Star}
-          tone="warning"
+          tone={successRate7d >= 95 ? "success" : successRate7d >= 80 ? "warning" : "destructive"}
+          hint={`${totalExec7d ?? 0} تنفيذ · ${errorsExec7d ?? 0} خطأ · تقييمات ${ratingRequestsThisWeek ?? 0}`}
         />
       </div>
 

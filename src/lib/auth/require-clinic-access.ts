@@ -35,10 +35,10 @@ export async function requireClinicManagerOrOwner(clinicId: string) {
   return { ok: false as const, status: 403 as const, message: "Forbidden" };
 }
 
-// Broader guard: any active staff member (manager/doctor/secretary) of this
-// clinic, or the owner. Used for the conversations inbox, where front-desk
-// staff — not just managers — reply to patients.
-export async function requireClinicMemberOrOwner(clinicId: string) {
+// Staff-only guard (JSON result): active manager/doctor/secretary of THIS
+// clinic. The platform owner is intentionally excluded — patient
+// conversations are private clinic data the operator must not read.
+export async function requireClinicMember(clinicId: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -54,13 +54,11 @@ export async function requireClinicMemberOrOwner(clinicId: string) {
     .eq("auth_id", user.id)
     .single();
 
-  if (!platformUser?.is_active) {
-    return { ok: false as const, status: 403 as const, message: "Forbidden" };
-  }
-  if (platformUser.role === "owner") {
-    return { ok: true as const, user };
-  }
-  if (platformUser.clinic_id === clinicId) {
+  if (
+    platformUser?.is_active &&
+    platformUser.role !== "owner" &&
+    platformUser.clinic_id === clinicId
+  ) {
     return { ok: true as const, user };
   }
 

@@ -12,8 +12,11 @@ export default async function ConversationsPage({
   params: Promise<{ clinicId: string }>;
 }) {
   const { clinicId } = await params;
-  // Any active staff member of this clinic may handle chats.
-  await requireClinicRole(clinicId, ["manager", "doctor", "secretary"]);
+  // Clinic staff only — the platform owner must not read patients' private
+  // conversations (allowOwner: false).
+  await requireClinicRole(clinicId, ["manager", "doctor", "secretary"], {
+    allowOwner: false,
+  });
 
   const admin = getAdminSupabase();
   const supabase = await createClient();

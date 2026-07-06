@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireClinicMemberOrOwner } from "@/lib/auth/require-clinic-access";
+import { requireClinicMember } from "@/lib/auth/require-clinic-access";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ id: string; convId: string }> };
@@ -8,7 +8,7 @@ type RouteContext = { params: Promise<{ id: string; convId: string }> };
 // Full message thread for one conversation. Polled while a thread is open.
 export async function GET(_request: Request, { params }: RouteContext) {
   const { id: clinicId, convId } = await params;
-  const auth = await requireClinicMemberOrOwner(clinicId);
+  const auth = await requireClinicMember(clinicId);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
