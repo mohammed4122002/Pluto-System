@@ -139,6 +139,28 @@ Message templates to pre-approve in Meta: `reminder_appointment`
 (vars: patient_name, doctor_name, time_remaining, appointment_time,
 address), `rating_request` (var: doctor_name), `rating_thanks` (no vars).
 
+**Interactive reminders (Telegram):** the reminder cron attaches an inline
+keyboard (`✅ تأكيد الحضور` / `❌ إلغاء الموعد`, `callback_data` =
+`confirm:<appt_id>` / `cancel:<appt_id>`) to Telegram reminders. The
+Telegram webhook branches on `body.callback_query` before the normal
+message flow: `cancel` calls the Data Write API to set
+`status='cancelled'`, both actions `answerCallbackQuery` with a popup. (WA
+interactive buttons need approved Meta templates — not wired yet.)
+
+## Dashboard data access for non-Supabase clinics (n8n Data APIs)
+
+Next.js can read/write a Supabase clinic's DB directly, but only n8n holds
+the Google credential, so Google Sheets clinics go through two static,
+secret-gated n8n webhooks (secret in `MEDISYNC_N8N_READ_SECRET`, default
+in `lib/db-adapters/sheets.ts`):
+- **Data Read API** (`/data-read`, POST `{clinic_id, resource, secret}`) —
+  returns Appointments/Reviews rows. `getClinicAppointments` /
+  `getClinicReviews` use it for `db_type='google_sheets'`.
+- **Data Write API** (`/data-write`, POST `{clinic_id, op, ...}`) —
+  `op='update_status'` (cancel/complete/no-show) or `op='insert'` (add
+  appointment). The appointment status actions + add-appointment form route
+  Sheets clinics here. Partial detail-edit is still Supabase-only.
+
 ## AI receptionist (n8n, built in n8n.cloud — not in this repo)
 
 Replaces the old static "idle state" greeting in both the WhatsApp and
