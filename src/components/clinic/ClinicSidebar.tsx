@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import {
   CalendarClock,
@@ -48,6 +49,30 @@ export function ClinicSidebar() {
   const base = `/clinic/${params.clinicId}`;
   const role = platformUser?.role ?? "secretary";
 
+  // Live count of conversations the AI handed off to a human, so staff see
+  // escalations from any page (not only when the inbox is open).
+  const [attention, setAttention] = useState(0);
+  useEffect(() => {
+    if (!params.clinicId) return;
+    let alive = true;
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `/api/clinics/${params.clinicId}/conversations/attention-count`
+        );
+        if (res.ok && alive) setAttention((await res.json()).count ?? 0);
+      } catch {
+        /* transient — keep last value */
+      }
+    };
+    load();
+    const t = setInterval(load, 15000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [params.clinicId]);
+
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -92,6 +117,11 @@ export function ClinicSidebar() {
               )}
               <item.icon className="size-4 shrink-0" />
               {item.label}
+              {item.href === "/conversations" && attention > 0 && (
+                <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground">
+                  {attention}
+                </span>
+              )}
             </Link>
           );
         })}
