@@ -71,6 +71,23 @@ function statusBreakdown(appointments: Appointment[]) {
   });
 }
 
+const DAY_LABELS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+function busiestDays(appointments: Appointment[]) {
+  const counts = new Array(7).fill(0);
+  for (const a of appointments) {
+    const d = new Date(a.appointment_time).getDay();
+    if (!Number.isNaN(d)) counts[d] += 1;
+  }
+  const max = Math.max(1, ...counts);
+  return DAY_LABELS.map((label, i) => ({
+    label,
+    count: counts[i],
+    percent: Math.round((counts[i] / max) * 100),
+    isPeak: counts[i] === max && counts[i] > 0,
+  }));
+}
+
 export default async function ClinicReportsPage({
   params,
 }: {
@@ -93,8 +110,8 @@ export default async function ClinicReportsPage({
       <div className="space-y-6">
         <PageHeader title="التقارير" />
         <EmptyState
-          title="لم يتم ربط قاعدة بيانات مباشرة"
-          description="التقارير متاحة حالياً لعيادات Supabase فقط."
+          title="لا يمكن قراءة بيانات هذه العيادة"
+          description="التقارير متاحة لعيادات Supabase وGoogle Sheets — عيادات SQL Server تُدار من نظامها الحالي."
         />
       </div>
     );
@@ -114,6 +131,8 @@ export default async function ClinicReportsPage({
 
   const trend = weeklyBuckets(appointments);
   const breakdown = statusBreakdown(appointments);
+  const peakDays = busiestDays(appointments);
+  const peakDay = peakDays.find((d) => d.isPeak);
 
   return (
     <div className="space-y-6">
@@ -165,6 +184,49 @@ export default async function ClinicReportsPage({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            أوقات الذروة (الأيام الأكثر ازدحاماً)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {total === 0 ? (
+            <p className="text-sm text-muted-foreground">لا توجد مواعيد بعد.</p>
+          ) : (
+            <>
+              {peakDay ? (
+                <p className="text-sm text-muted-foreground">
+                  أكثر يوم ازدحاماً:{" "}
+                  <span className="font-semibold text-foreground">{peakDay.label}</span>{" "}
+                  ({peakDay.count} موعد)
+                </p>
+              ) : null}
+              {peakDays.map((d) => (
+                <div key={d.label} className="flex items-center gap-3 text-sm">
+                  <span className="w-16 shrink-0">{d.label}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full",
+                        d.isPeak ? "bg-primary" : "bg-primary/40"
+                      )}
+                      style={{ width: `${d.percent}%` }}
+                    />
+                  </div>
+                  <span
+                    className="w-8 shrink-0 text-end text-muted-foreground"
+                    dir="ltr"
+                  >
+                    {d.count}
+                  </span>
+                </div>
+              ))}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
