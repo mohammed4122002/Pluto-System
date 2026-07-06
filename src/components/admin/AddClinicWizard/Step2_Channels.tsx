@@ -87,12 +87,10 @@ export function Step2_Channels({ data, update }: StepProps) {
         body: JSON.stringify({ bot_token: telegram.tg_bot_token }),
       });
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.debug ? `${json.error} | ${JSON.stringify(json.debug)}` : json.error ?? "فشل الاختبار");
-      }
+      if (!res.ok || !json.ok) throw new Error(json.error ?? "فشل الاختبار");
       toast.success(`رمز صالح ✅ البوت: @${json.bot.username}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "فشل الاختبار", { duration: 30000 });
+      toast.error(err instanceof Error ? err.message : "فشل الاختبار");
     } finally {
       setTestingTelegram(false);
     }

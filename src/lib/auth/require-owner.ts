@@ -1,5 +1,4 @@
 import "server-only";
-import { cookies, headers } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,25 +8,10 @@ export async function requireOwner() {
   const supabase = await createClient();
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
   if (!user) {
-    // TEMPORARY: verbose diagnostics for the Unauthorized-on-API-routes bug —
-    // surfaced in the response body itself, not just server logs.
-    const cookieStore = await cookies();
-    const headerStore = await headers();
-    const debug = {
-      authError: error?.message ?? null,
-      authErrorStatus: error?.status ?? null,
-      cookieNames: cookieStore.getAll().map((c) => c.name),
-      host: headerStore.get("host"),
-      xForwardedHost: headerStore.get("x-forwarded-host"),
-      xVercelId: headerStore.get("x-vercel-id"),
-      origin: headerStore.get("origin"),
-      referer: headerStore.get("referer"),
-    };
-    return { ok: false as const, status: 401 as const, message: "Unauthorized", debug };
+    return { ok: false as const, status: 401 as const, message: "Unauthorized" };
   }
 
   const { data: platformUser } = await supabase

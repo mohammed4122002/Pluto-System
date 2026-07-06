@@ -6,10 +6,7 @@ import { getTelegramBotInfo } from "@/lib/telegram/bot-api";
 export async function POST(request: Request) {
   const auth = await requireOwner();
   if (!auth.ok) {
-    return NextResponse.json(
-      { error: auth.message, debug: "debug" in auth ? auth.debug : undefined },
-      { status: auth.status }
-    );
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
   const { bot_token } = (await request.json()) as { bot_token: string };
