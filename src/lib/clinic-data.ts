@@ -5,6 +5,77 @@ import { createClinicSupabaseClient } from "@/lib/db-adapters/supabase";
 import { readSheetsResource } from "@/lib/db-adapters/sheets";
 import type { Appointment, Clinic, ClinicDbConfig, Review } from "@/types";
 
+export interface DerivedPatient {
+  key: string;
+  name: string;
+  phone: string;
+  total: number;
+  completed: number;
+  cancelled: number;
+  no_show: number;
+  last_visit: string | null;
+  next_upcoming: string | null;
+}
+
+// A patient list derived from the appointment history — works the same for
+// Supabase and Google Sheets clinics (both flow through getClinicAppointments)
+// without requiring a separate Patients table/tab. Grouped by phone, falling
+// back to name when a phone isn't recorded.
+export function derivePatients(appointments: Appointment[]): DerivedPatient[] {
+  const now = Date.now();
+  const map = new Map<string, DerivedPatient>();
+
+  for (const a of appointments) {
+    const phone = (a.patient_phone ?? "").trim();
+    const name = (a.patient_name ?? "").trim();
+    const key = phone || name;
+    if (!key) continue;
+
+    let p = map.get(key);
+    if (!p) {
+      p = {
+        key,
+        name: name || "—",
+        phone,
+        total: 0,
+        completed: 0,
+        cancelled: 0,
+        no_show: 0,
+        last_visit: null,
+        next_upcoming: null,
+      };
+      map.set(key, p);
+    }
+    if (!p.name || p.name === "—") p.name = name || p.name;
+    if (!p.phone) p.phone = phone;
+
+    p.total += 1;
+    if (a.status === "completed") p.completed += 1;
+    else if (a.status === "cancelled") p.cancelled += 1;
+    else if (a.status === "no_show") p.no_show += 1;
+
+    const t = a.appointment_time ? new Date(a.appointment_time).getTime() : NaN;
+    if (!Number.isNaN(t)) {
+      if (t <= now && (!p.last_visit || t > new Date(p.last_visit).getTime())) {
+        p.last_visit = a.appointment_time;
+      }
+      if (
+        t > now &&
+        a.status === "scheduled" &&
+        (!p.next_upcoming || t < new Date(p.next_upcoming).getTime())
+      ) {
+        p.next_upcoming = a.appointment_time;
+      }
+    }
+  }
+
+  return [...map.values()].sort((a, b) => {
+    const at = a.next_upcoming ?? a.last_visit ?? "";
+    const bt = b.next_upcoming ?? b.last_visit ?? "";
+    return bt.localeCompare(at);
+  });
+}
+
 function truthy(v: unknown) {
   return v === true || v === "TRUE" || v === "true" || v === 1 || v === "1";
 }
