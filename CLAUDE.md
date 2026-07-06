@@ -1,22 +1,26 @@
 # MediSync AI — Project Context
 
-Multi-tenant SaaS: clinic owners get a dashboard + a WhatsApp bot that
-automates two things (MVP scope, nothing else):
+Multi-tenant SaaS: clinic owners get a dashboard + a WhatsApp/Telegram bot
+that automates:
 
-1. **Appointment reminder** — sent X hours before the appointment via WhatsApp.
-2. **Post-visit rating** — stars 1–5 + optional comment, collected via WhatsApp.
+1. **Appointment reminder** — sent X hours before the appointment.
+2. **Post-visit rating** — stars 1–5 + optional comment.
+3. **AI receptionist** — a conversational agent (see below) that answers
+   patient questions and can book/cancel appointments via chat. Scope
+   expanded mid-project (explicit owner decision) from the original
+   "reminders + ratings only" MVP — see "AI receptionist" section below.
 
-One n8n workflow (owned by the platform, not per-clinic) serves every
-clinic: it reads `clinic_key`/`wa_phone_id` from the incoming
+One n8n workflow per channel (owned by the platform, not per-clinic) serves
+every clinic: it reads `clinic_key`/`wa_phone_id` from the incoming
 request/cron tick, looks up that clinic's config from the `clinics_config`
 view in the **owner's** Supabase project, then acts using that clinic's own
-credentials (WhatsApp token, and its own DB — Supabase, SQL Server, or
-Google Sheets).
+credentials (WhatsApp/Telegram token, and its own DB — Supabase, SQL Server,
+or Google Sheets).
 
-Do not build: AI booking bot, payments, multi-doctor/multi-branch,
-white-label, SMS/email, a patient-facing app, analytics/AI insights.
-Telegram/Messenger/Instagram: wire the UI toggle and persist to DB, but
-n8n only actually sends WhatsApp in MVP.
+Do not build: payments, multi-doctor/multi-branch, white-label, SMS/email,
+analytics/AI insights. Messenger/Instagram: wire the UI toggle and persist
+to DB only — n8n doesn't send on those channels yet. WhatsApp and Telegram
+both fully work (reminders, ratings, and the AI receptionist below).
 
 ## Two databases, don't confuse them
 
@@ -134,3 +138,33 @@ mark `rating_sent = true` → log.
 Message templates to pre-approve in Meta: `reminder_appointment`
 (vars: patient_name, doctor_name, time_remaining, appointment_time,
 address), `rating_request` (var: doctor_name), `rating_thanks` (no vars).
+
+## AI receptionist (n8n, built in n8n.cloud — not in this repo)
+
+Replaces the old static "idle state" greeting in both the WhatsApp and
+Telegram webhook workflows. An `AI Agent` node (OpenAI Chat Model + Simple
+Memory keyed per clinic+patient) handles any free-text message that isn't
+part of the rating flow, with three tools (each a separate n8n sub-workflow
+called via "Call n8n Workflow Tool", internally branching on `db_type` the
+same way the reminder/rating crons do):
+
+- **Get Appointments** — looks up the patient's own upcoming appointments
+  by phone.
+- **Book Appointment** — validates the requested time against
+  `clinic_automation.working_hours_start/end`, checks for a conflicting
+  slot, then inserts. Refuses (and tells the patient why) if out of hours
+  or already booked.
+- **Cancel Appointment** — finds and cancels a matching upcoming
+  appointment for that patient.
+
+System prompt boundaries (keep true as you extend this):
+- Acts as the clinic's real receptionist — natural tone, not a form.
+- Knows only this clinic's static info (name, doctor, specialty, address,
+  phone, working hours) plus what the tools return — never other clinics'
+  data.
+- **Never gives medical advice** — anything beyond scheduling/clinic-info
+  gets deferred to "تواصل مع العيادة مباشرة".
+- Can create/cancel real appointments (write access) — this is the one
+  place patient-facing chat writes to clinic data, so the conflict/working-
+  hours checks in the tool sub-workflows are the actual safety net, not the
+  prompt.
