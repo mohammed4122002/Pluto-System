@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Bot, Loader2, Send, User, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,16 +61,41 @@ export function ConversationsInbox({
     [clinicId]
   );
 
-  // Poll the list continuously, and the open thread more frequently.
+  // Realtime is the primary update path; the slow poll is just a fallback in
+  // case the socket drops (RLS scopes changes to this clinic's rows already).
   useEffect(() => {
-    const t = setInterval(loadList, 7000);
-    return () => clearInterval(t);
-  }, [loadList]);
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`inbox-${clinicId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversations", filter: `clinic_id=eq.${clinicId}` },
+        () => loadList()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversation_messages", filter: `clinic_id=eq.${clinicId}` },
+        () => {
+          loadList();
+          setActiveId((cur) => {
+            if (cur) loadThread(cur);
+            return cur;
+          });
+        }
+      )
+      .subscribe();
+
+    const poll = setInterval(loadList, 20000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
+  }, [clinicId, loadList, loadThread]);
 
   useEffect(() => {
     if (!activeId) return;
     loadThread(activeId);
-    const t = setInterval(() => loadThread(activeId), 4000);
+    const t = setInterval(() => loadThread(activeId), 15000);
     return () => clearInterval(t);
   }, [activeId, loadThread]);
 
