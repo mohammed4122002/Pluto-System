@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ExportButton } from "@/components/shared/ExportButton";
 import type { DerivedPatient } from "@/lib/clinic-data";
 
 function dateAr(iso: string | null) {
@@ -46,13 +47,29 @@ export function PatientsTable({ patients }: { patients: DerivedPatient[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground start-3" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="ابحث بالاسم أو رقم الهاتف..."
-          className="w-full rounded-lg border border-input bg-background py-2 ps-9 pe-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground start-3" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ابحث بالاسم أو رقم الهاتف..."
+            className="w-full rounded-lg border border-input bg-background py-2 ps-9 pe-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+        <ExportButton
+          filename="patients"
+          rows={filtered as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: "name", label: "الاسم" },
+            { key: "phone", label: "الهاتف" },
+            { key: "total", label: "إجمالي الزيارات" },
+            { key: "completed", label: "مكتملة" },
+            { key: "no_show", label: "تغيّب" },
+            { key: "cancelled", label: "ملغاة" },
+            { key: "last_visit", label: "آخر زيارة" },
+            { key: "next_upcoming", label: "الموعد القادم" },
+          ]}
         />
       </div>
 

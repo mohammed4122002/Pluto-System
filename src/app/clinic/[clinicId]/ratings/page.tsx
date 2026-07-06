@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RatingStars } from "@/components/clinic/RatingStars";
 import { RatingsTrendChart } from "@/components/clinic/RatingsTrendChart";
+import { ExportButton } from "@/components/shared/ExportButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -76,9 +77,35 @@ export default async function ClinicRatingsPage({
   const trend = monthlyTrend(reviews);
   const dist = distribution(reviews);
 
+  const exportRows = reviews.map((r) => ({
+    date: new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
+      new Date(r.created_at)
+    ),
+    stars: r.stars,
+    phone: maskPhone(r.patient_phone),
+    comment: r.comment ?? "",
+  }));
+
   return (
     <div className="space-y-6">
-      <PageHeader title="التقييمات" description={`${reviews.length} تقييم`} />
+      <PageHeader
+        title="التقييمات"
+        description={`${reviews.length} تقييم`}
+        actions={
+          reviews.length > 0 ? (
+            <ExportButton
+              filename="ratings"
+              rows={exportRows}
+              columns={[
+                { key: "date", label: "التاريخ" },
+                { key: "stars", label: "النجوم" },
+                { key: "phone", label: "الهاتف" },
+                { key: "comment", label: "التعليق" },
+              ]}
+            />
+          ) : undefined
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card>
