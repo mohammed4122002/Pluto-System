@@ -41,6 +41,42 @@ export async function readSheetsResource(
   }
 }
 
+// Writes back to a Sheets clinic through the n8n data-write endpoint (only
+// n8n can write the sheet). Supports 'update_status' (cancel/complete/no-show)
+// and 'insert' (add appointment). Throws on failure so the caller can toast.
+export async function writeSheetsAppointment(payload: {
+  clinicId: string;
+  op: "update_status" | "insert";
+  id?: string;
+  status?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  appointment_time?: string;
+  notes?: string;
+}) {
+  const res = await fetch(
+    `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/data-write`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clinic_id: payload.clinicId,
+        resource: "appointments",
+        op: payload.op,
+        id: payload.id,
+        status: payload.status,
+        patient_name: payload.patient_name,
+        patient_phone: payload.patient_phone,
+        appointment_time: payload.appointment_time,
+        notes: payload.notes,
+        secret: N8N_READ_SECRET,
+      }),
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("تعذّر حفظ التغيير في جدول العيادة");
+}
+
 export async function testSheetsConnectionConfig(dbConfig: ClinicDbConfig) {
   if (!dbConfig.gs_spreadsheet_id) {
     return { ok: false, error: "لم يتم إدخال رابط جدول بيانات صالح" };

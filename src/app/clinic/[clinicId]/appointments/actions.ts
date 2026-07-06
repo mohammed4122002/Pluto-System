@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getClinicWithDbConfig } from "@/lib/clinic-data";
 import { createClinicSupabaseClient } from "@/lib/db-adapters/supabase";
+import { writeSheetsAppointment } from "@/lib/db-adapters/sheets";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import type { AppointmentStatus } from "@/types";
 
@@ -29,8 +30,20 @@ export async function updateAppointmentStatus(
   status: AppointmentStatus
 ) {
   await requireClinicRole(clinicId, ["manager", "secretary"]);
-  const client = await getWritableClient(clinicId);
+  const clinic = await getClinicWithDbConfig(clinicId);
 
+  if (clinic?.db_config?.db_type === "google_sheets") {
+    await writeSheetsAppointment({
+      clinicId,
+      op: "update_status",
+      id: appointmentId,
+      status,
+    });
+    revalidateAppointmentPaths(clinicId);
+    return;
+  }
+
+  const client = await getWritableClient(clinicId);
   const { error } = await client
     .from("appointments")
     .update({ status })
