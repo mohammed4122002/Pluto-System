@@ -53,6 +53,7 @@ export interface Clinic {
   logo_url?: string;
   status: ClinicStatus;
   notes?: string;
+  ai_info_text?: string | null;
   created_at: string;
   // joined
   subscription?: Subscription;

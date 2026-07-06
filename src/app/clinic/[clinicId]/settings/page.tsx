@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClinicSettingsForm } from "@/components/clinic/ClinicSettingsForm";
-import type { ClinicAutomation } from "@/types";
+import { ClinicInfoForm } from "@/components/clinic/ClinicInfoForm";
+import { ClinicStaffManager } from "@/components/admin/ClinicStaffManager";
+import type { Clinic, ClinicAutomation } from "@/types";
 
 export default async function ClinicSettingsPage({
   params,
@@ -13,18 +16,54 @@ export default async function ClinicSettingsPage({
   const { clinicId } = await params;
   await requireClinicRole(clinicId, ["manager"]);
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("clinic_automation")
-    .select("*")
-    .eq("clinic_id", clinicId)
-    .single();
+
+  const [{ data: clinic }, { data: automation }, { data: staff }] = await Promise.all([
+    supabase.from("clinics").select("*").eq("id", clinicId).single(),
+    supabase.from("clinic_automation").select("*").eq("clinic_id", clinicId).single(),
+    // Staff listing needs the admin client: platform_users RLS only exposes
+    // the caller's own row to non-owners. The manager role check above gates
+    // access to this page.
+    getAdminSupabase()
+      .from("platform_users")
+      .select("id, name, email, role, is_active, created_at")
+      .eq("clinic_id", clinicId)
+      .order("created_at", { ascending: true }),
+  ]);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="إعدادات العيادة" description="التذكيرات وطلبات التقييم وساعات العمل" />
+      <PageHeader
+        title="إعدادات العيادة"
+        description="معلومات العيادة، المساعد الذكي، أوقات العمل، والموظفون — كل التحكم من مكان واحد"
+      />
+
       <Card>
-        <CardContent className="p-6">
-          <ClinicSettingsForm clinicId={clinicId} automation={data as ClinicAutomation | null} />
+        <CardHeader>
+          <CardTitle className="text-base">معلومات العيادة والمساعد الذكي</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {clinic ? <ClinicInfoForm clinic={clinic as Clinic} /> : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">أوقات العمل والتذكيرات والتقييم</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ClinicSettingsForm
+            clinicId={clinicId}
+            automation={automation as ClinicAutomation | null}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">الموظفون</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ClinicStaffManager clinicId={clinicId} initialStaff={staff ?? []} />
         </CardContent>
       </Card>
     </div>

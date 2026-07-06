@@ -57,10 +57,24 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const { error } = await getAdminSupabase().from("clinics").delete().eq("id", id);
+  const adminSupabase = getAdminSupabase();
+
+  // Staff auth accounts are not covered by the ON DELETE CASCADE on
+  // platform_users — collect them first so their emails are reusable after
+  // the clinic is gone (deleting only the clinic left orphans in auth.users).
+  const { data: staff } = await adminSupabase
+    .from("platform_users")
+    .select("auth_id")
+    .eq("clinic_id", id);
+
+  const { error } = await adminSupabase.from("clinics").delete().eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  for (const member of staff ?? []) {
+    await adminSupabase.auth.admin.deleteUser(member.auth_id);
   }
 
   return NextResponse.json({ ok: true });

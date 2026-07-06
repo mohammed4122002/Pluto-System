@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireOwner } from "@/lib/auth/require-owner";
+import { requireClinicManagerOrOwner } from "@/lib/auth/require-clinic-access";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import type { UserRole } from "@/types";
 
@@ -9,12 +9,11 @@ type RouteContext = { params: Promise<{ id: string }> };
 const STAFF_ROLES: UserRole[] = ["manager", "doctor", "secretary"];
 
 export async function GET(_request: Request, { params }: RouteContext) {
-  const auth = await requireOwner();
+  const { id } = await params;
+  const auth = await requireClinicManagerOrOwner(id);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
-
-  const { id } = await params;
   const { data, error } = await getAdminSupabase()
     .from("platform_users")
     .select("id, name, email, role, is_active, created_at")
@@ -29,12 +28,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
-  const auth = await requireOwner();
+  const { id: clinicId } = await params;
+  const auth = await requireClinicManagerOrOwner(clinicId);
   if (!auth.ok) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
-
-  const { id: clinicId } = await params;
   const body = await request.json();
   const name = String(body.name ?? "").trim();
   const email = String(body.email ?? "").trim().toLowerCase();
