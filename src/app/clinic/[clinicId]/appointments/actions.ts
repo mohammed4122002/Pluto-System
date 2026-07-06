@@ -60,20 +60,36 @@ export async function updateAppointmentDetails(
   formData: FormData
 ) {
   await requireClinicRole(clinicId, ["manager", "secretary"]);
-  const client = await getWritableClient(clinicId);
+  const clinic = await getClinicWithDbConfig(clinicId);
 
   const patient_name = String(formData.get("patient_name") ?? "");
   const patient_phone = String(formData.get("patient_phone") ?? "");
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
   const notes = String(formData.get("notes") ?? "");
+  const appointment_time = new Date(`${date}T${time}`).toISOString();
 
+  if (clinic?.db_config?.db_type === "google_sheets") {
+    await writeSheetsAppointment({
+      clinicId,
+      op: "update_details",
+      id: appointmentId,
+      patient_name,
+      patient_phone,
+      appointment_time,
+      notes,
+    });
+    revalidateAppointmentPaths(clinicId);
+    return;
+  }
+
+  const client = await getWritableClient(clinicId);
   const { error } = await client
     .from("appointments")
     .update({
       patient_name,
       patient_phone,
-      appointment_time: new Date(`${date}T${time}`).toISOString(),
+      appointment_time,
       notes: notes || null,
     })
     .eq("id", appointmentId);

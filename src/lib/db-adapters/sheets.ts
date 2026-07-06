@@ -46,7 +46,7 @@ export async function readSheetsResource(
 // and 'insert' (add appointment). Throws on failure so the caller can toast.
 export async function writeSheetsAppointment(payload: {
   clinicId: string;
-  op: "update_status" | "insert";
+  op: "update_status" | "insert" | "update_details";
   id?: string;
   status?: string;
   patient_name?: string;
