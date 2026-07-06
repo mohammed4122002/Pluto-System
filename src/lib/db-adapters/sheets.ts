@@ -11,6 +11,36 @@ import type { ClinicDbConfig } from "@/types";
 const N8N_WEBHOOK_BASE =
   process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL ?? "https://admin12121.app.n8n.cloud/webhook";
 
+// Shared secret gating the n8n data-read endpoint. Server-only; set
+// MEDISYNC_N8N_READ_SECRET in the deploy env to override the default.
+const N8N_READ_SECRET =
+  process.env.MEDISYNC_N8N_READ_SECRET ?? "msync_read_7f3a9c21b8e64d05a1";
+
+// Google Sheets clinics can't be read directly from Next.js (only n8n holds
+// the Google credential), so the dashboard reads their data through a small
+// always-on n8n endpoint that returns the requested tab's rows as JSON.
+export async function readSheetsResource(
+  clinicId: string,
+  resource: "appointments" | "patients" | "reviews"
+): Promise<Record<string, unknown>[] | null> {
+  try {
+    const res = await fetch(
+      `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/data-read`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clinic_id: clinicId, resource, secret: N8N_READ_SECRET }),
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return null;
+  }
+}
+
 export async function testSheetsConnectionConfig(dbConfig: ClinicDbConfig) {
   if (!dbConfig.gs_spreadsheet_id) {
     return { ok: false, error: "لم يتم إدخال رابط جدول بيانات صالح" };
