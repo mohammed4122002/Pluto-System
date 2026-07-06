@@ -34,3 +34,35 @@ export async function requireClinicManagerOrOwner(clinicId: string) {
 
   return { ok: false as const, status: 403 as const, message: "Forbidden" };
 }
+
+// Broader guard: any active staff member (manager/doctor/secretary) of this
+// clinic, or the owner. Used for the conversations inbox, where front-desk
+// staff — not just managers — reply to patients.
+export async function requireClinicMemberOrOwner(clinicId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false as const, status: 401 as const, message: "Unauthorized" };
+  }
+
+  const { data: platformUser } = await supabase
+    .from("platform_users")
+    .select("role, clinic_id, is_active")
+    .eq("auth_id", user.id)
+    .single();
+
+  if (!platformUser?.is_active) {
+    return { ok: false as const, status: 403 as const, message: "Forbidden" };
+  }
+  if (platformUser.role === "owner") {
+    return { ok: true as const, user };
+  }
+  if (platformUser.clinic_id === clinicId) {
+    return { ok: true as const, user };
+  }
+
+  return { ok: false as const, status: 403 as const, message: "Forbidden" };
+}

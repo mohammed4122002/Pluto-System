@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   MessageCircle,
+  MessagesSquare,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ import type { UserRole } from "@/types";
 
 const NAV_ITEMS: { href: string; label: string; icon: typeof CalendarClock; roles: UserRole[] }[] = [
   { href: "", label: "اليوم", icon: CalendarClock, roles: ["owner", "manager", "doctor", "secretary"] },
+  { href: "/conversations", label: "المحادثات", icon: MessagesSquare, roles: ["owner", "manager", "doctor", "secretary"] },
   { href: "/appointments", label: "المواعيد", icon: ClipboardList, roles: ["owner", "manager", "secretary"] },
   { href: "/reminders", label: "التذكيرات", icon: BellRing, roles: ["owner", "manager", "secretary"] },
   { href: "/ratings", label: "التقييمات", icon: Star, roles: ["owner", "manager", "doctor"] },

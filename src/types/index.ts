@@ -171,3 +171,28 @@ export interface AddClinicFormData {
   starts_at: string;
   payment_note: string;
 }
+
+export type ConversationChannel = "telegram" | "whatsapp";
+export type ConversationMode = "ai" | "human";
+export type MessageSender = "patient" | "ai" | "staff";
+
+export interface Conversation {
+  id: string;
+  channel: ConversationChannel;
+  chat_ref: string;
+  patient_phone: string | null;
+  patient_name: string | null;
+  mode: ConversationMode;
+  needs_attention: boolean;
+  last_message_at: string;
+  last_message_preview: string | null;
+  last_sender: MessageSender | null;
+}
+
+export interface ConversationMessage {
+  id: string;
+  direction: "in" | "out";
+  sender: MessageSender;
+  body: string | null;
+  created_at: string;
+}
