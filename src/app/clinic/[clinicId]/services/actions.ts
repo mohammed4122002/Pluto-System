@@ -46,6 +46,17 @@ function parseServiceInput(form: {
   };
 }
 
+// Server actions return a result object instead of throwing: Next.js redacts
+// thrown server-action error messages in production (replacing them with a
+// generic "error occurred in the Server Components render" digest), which
+// would hide our clear Arabic messages. Returning the error as data keeps it
+// intact for the client toast.
+export type ActionResult = { ok: true } | { ok: false; error: string };
+
+function fail(e: unknown): ActionResult {
+  return { ok: false, error: e instanceof Error ? e.message : "حدث خطأ غير متوقع" };
+}
+
 export async function saveService(
   clinicId: string,
   payload: {
@@ -57,23 +68,31 @@ export async function saveService(
     active: boolean;
     employee_ids: string[];
   }
-) {
+): Promise<ActionResult> {
   await requireClinicRole(clinicId, ["manager"]);
-  const dbConfig = await loadDbConfig(clinicId);
-  const input = parseServiceInput(payload);
-
-  if (payload.id) {
-    await updateService(dbConfig, payload.id, input);
-  } else {
-    await createService(dbConfig, input);
+  try {
+    const dbConfig = await loadDbConfig(clinicId);
+    const input = parseServiceInput(payload);
+    if (payload.id) {
+      await updateService(dbConfig, payload.id, input);
+    } else {
+      await createService(dbConfig, input);
+    }
+    revalidatePath(`/clinic/${clinicId}/services`);
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
   }
-
-  revalidatePath(`/clinic/${clinicId}/services`);
 }
 
-export async function removeService(clinicId: string, id: string) {
+export async function removeService(clinicId: string, id: string): Promise<ActionResult> {
   await requireClinicRole(clinicId, ["manager"]);
-  const dbConfig = await loadDbConfig(clinicId);
-  await deleteService(dbConfig, id);
-  revalidatePath(`/clinic/${clinicId}/services`);
+  try {
+    const dbConfig = await loadDbConfig(clinicId);
+    await deleteService(dbConfig, id);
+    revalidatePath(`/clinic/${clinicId}/services`);
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
 }

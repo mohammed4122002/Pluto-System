@@ -38,7 +38,8 @@ export function AppointmentForm({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await createAppointment(clinicId, formData);
+        const res = await createAppointment(clinicId, formData);
+        if (res && !res.ok) toast.error(res.error);
       } catch (err) {
         const digest = (err as { digest?: string })?.digest ?? "";
         if (digest.startsWith("NEXT_REDIRECT")) throw err;

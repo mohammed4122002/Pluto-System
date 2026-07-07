@@ -57,23 +57,20 @@ export function AppointmentActionsMenu({
 
   function setStatus(status: AppointmentStatus) {
     startTransition(async () => {
-      try {
-        await updateAppointmentStatus(clinicId, appointment.id, status);
-        toast.success("تم تحديث حالة الموعد");
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
-      }
+      const res = await updateAppointmentStatus(clinicId, appointment.id, status);
+      if (res.ok) toast.success("تم تحديث حالة الموعد");
+      else toast.error(res.error);
     });
   }
 
   function handleEditSubmit(formData: FormData) {
     startTransition(async () => {
-      try {
-        await updateAppointmentDetails(clinicId, appointment.id, formData);
+      const res = await updateAppointmentDetails(clinicId, appointment.id, formData);
+      if (res.ok) {
         toast.success("تم حفظ التعديلات");
         setEditOpen(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
+      } else {
+        toast.error(res.error);
       }
     });
   }

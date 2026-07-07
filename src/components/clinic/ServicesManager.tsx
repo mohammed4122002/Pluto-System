@@ -103,21 +103,21 @@ export function ServicesManager({
 
   function handleSave() {
     startTransition(async () => {
-      try {
-        await saveService(clinicId, {
-          id: draft.id,
-          name: draft.name,
-          description: draft.description,
-          duration_minutes: Number(draft.duration_minutes) || 30,
-          price: draft.price,
-          active: draft.active,
-          employee_ids: draft.employee_ids,
-        });
+      const res = await saveService(clinicId, {
+        id: draft.id,
+        name: draft.name,
+        description: draft.description,
+        duration_minutes: Number(draft.duration_minutes) || 30,
+        price: draft.price,
+        active: draft.active,
+        employee_ids: draft.employee_ids,
+      });
+      if (res.ok) {
         toast.success(draft.id ? "تم تحديث الخدمة" : "تمت إضافة الخدمة");
         setOpen(false);
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ");
+      } else {
+        toast.error(res.error);
       }
     });
   }
@@ -125,15 +125,14 @@ export function ServicesManager({
   function handleDelete(id: string) {
     setDeletingId(id);
     startTransition(async () => {
-      try {
-        await removeService(clinicId, id);
+      const res = await removeService(clinicId, id);
+      if (res.ok) {
         toast.success("تم حذف الخدمة");
         router.refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ");
-      } finally {
-        setDeletingId(null);
+      } else {
+        toast.error(res.error);
       }
+      setDeletingId(null);
     });
   }
 

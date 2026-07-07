@@ -266,12 +266,9 @@ function AbsenceRow({
         aria-label="حذف الغياب"
         onClick={() =>
           startTransition(async () => {
-            try {
-              await removeEmployeeAbsence(clinicId, absence.id);
-              router.refresh();
-            } catch (err) {
-              toast.error(err instanceof Error ? err.message : "حدث خطأ");
-            }
+            const res = await removeEmployeeAbsence(clinicId, absence.id);
+            if (res.ok) router.refresh();
+            else toast.error(res.error);
           })
         }
       >
@@ -303,16 +300,16 @@ function ScheduleDialog({
 
   function save() {
     startTransition(async () => {
-      try {
-        await updateEmployeeSchedule(clinicId, employee.id, {
-          work_start: start || null,
-          work_end: end || null,
-          working_days: days.slice().sort((a, b) => a - b),
-        });
+      const res = await updateEmployeeSchedule(clinicId, employee.id, {
+        work_start: start || null,
+        work_end: end || null,
+        working_days: days.slice().sort((a, b) => a - b),
+      });
+      if (res.ok) {
         toast.success("تم حفظ الدوام");
         onSaved();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ");
+      } else {
+        toast.error(res.error);
       }
     });
   }
@@ -388,16 +385,16 @@ function AbsenceDialog({
 
   function save() {
     startTransition(async () => {
-      try {
-        await addEmployeeAbsence(clinicId, {
-          employee_user_id: employee.id,
-          absence_date: date,
-          reason,
-        });
+      const res = await addEmployeeAbsence(clinicId, {
+        employee_user_id: employee.id,
+        absence_date: date,
+        reason,
+      });
+      if (res.ok) {
         toast.success("تم تسجيل الغياب");
         onSaved();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "حدث خطأ");
+      } else {
+        toast.error(res.error);
       }
     });
   }
