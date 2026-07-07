@@ -22,6 +22,8 @@ export async function createAppointment(clinicId: string, formData: FormData) {
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
   const notes = String(formData.get("notes") ?? "");
+  const service_id = String(formData.get("service_id") ?? "").trim() || null;
+  const employee_user_id = String(formData.get("employee_user_id") ?? "").trim() || null;
   const appointment_time = new Date(`${date}T${time}`).toISOString();
 
   if (clinic.db_config.db_type === "google_sheets") {
@@ -32,6 +34,8 @@ export async function createAppointment(clinicId: string, formData: FormData) {
       patient_phone,
       appointment_time,
       notes,
+      service_id,
+      employee_user_id,
     });
     redirect(`/clinic/${clinicId}/appointments`);
   }
@@ -42,6 +46,8 @@ export async function createAppointment(clinicId: string, formData: FormData) {
     patient_phone,
     appointment_time,
     notes: notes || null,
+    service_id,
+    employee_user_id,
   });
 
   if (error) {

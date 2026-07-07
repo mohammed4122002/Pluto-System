@@ -61,6 +61,8 @@ export async function writeSheetsAppointment(payload: {
   patient_phone?: string;
   appointment_time?: string;
   notes?: string;
+  service_id?: string | null;
+  employee_user_id?: string | null;
 }) {
   const res = await fetch(
     `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/data-write`,
@@ -77,6 +79,8 @@ export async function writeSheetsAppointment(payload: {
         patient_phone: payload.patient_phone,
         appointment_time: payload.appointment_time,
         notes: payload.notes,
+        service_id: payload.service_id ?? "",
+        employee_user_id: payload.employee_user_id ?? "",
         secret: N8N_READ_SECRET,
       }),
       cache: "no-store",
