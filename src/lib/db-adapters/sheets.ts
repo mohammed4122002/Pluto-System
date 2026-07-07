@@ -16,6 +16,28 @@ const N8N_WEBHOOK_BASE =
 const N8N_READ_SECRET =
   process.env.MEDISYNC_N8N_READ_SECRET ?? "msync_read_7f3a9c21b8e64d05a1";
 
+// n8n's hosted gateway answers with HTTP 200 + an HTML error page when the
+// account hits its execution limit — a bare `res.ok` check would treat that
+// as success and report a false "saved". Require an actual `{ ok: true }`
+// JSON body before treating a write as persisted.
+async function assertN8nWriteOk(res: Response) {
+  const text = await res.text();
+  let json: { ok?: boolean } | null = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = null;
+  }
+  if (!res.ok || !json || json.ok !== true) {
+    if (/execution limit|max_executions|upgrading your plan/i.test(text)) {
+      throw new Error(
+        "تعذّر الحفظ — خدمة الأتمتة (n8n) تجاوزت حد التنفيذ المسموح. لم يتم الحفظ فعلياً؛ يرجى ترقية خطة n8n أو المحاولة لاحقاً."
+      );
+    }
+    throw new Error("تعذّر حفظ التغيير في جدول العيادة");
+  }
+}
+
 // Google Sheets clinics can't be read directly from Next.js (only n8n holds
 // the Google credential), so the dashboard reads their data through a small
 // always-on n8n endpoint that returns the requested tab's rows as JSON.
@@ -86,7 +108,7 @@ export async function writeSheetsAppointment(payload: {
       cache: "no-store",
     }
   );
-  if (!res.ok) throw new Error("تعذّر حفظ التغيير في جدول العيادة");
+  await assertN8nWriteOk(res);
 }
 
 // Generic write for the services/employees resources (services,
@@ -119,7 +141,7 @@ export async function writeSheetsData(payload: {
       cache: "no-store",
     }
   );
-  if (!res.ok) throw new Error("تعذّر حفظ التغيير في جدول العيادة");
+  await assertN8nWriteOk(res);
 }
 
 export async function testSheetsConnectionConfig(dbConfig: ClinicDbConfig) {

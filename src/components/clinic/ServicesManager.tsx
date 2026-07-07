@@ -152,7 +152,8 @@ export function ServicesManager({
       {loadFailed ? (
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            تعذّر تحميل الخدمات من قاعدة العيادة. تأكد من إعداد جدول الخدمات ثم أعد المحاولة.
+            تعذّر تحميل الخدمات حالياً. لعيادات Google Sheets تُقرأ البيانات عبر خدمة
+            الأتمتة (n8n) — تأكد من أنها متاحة (لم تتجاوز حد التنفيذ) ثم أعد المحاولة.
           </CardContent>
         </Card>
       ) : initialServices.length === 0 ? (
