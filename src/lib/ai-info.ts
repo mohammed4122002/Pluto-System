@@ -8,26 +8,21 @@ export interface AiInfoService {
   name: string;
   price: string;
   note: string;
+  instructions: string; // per-service patient instructions
 }
 
 export interface AiInfoForm {
   services: AiInfoService[];
   working_hours: string;
   insurance: string;
-  prep: string;
-  sun: string;
-  results: string;
   cancel_policy: string;
   late_policy: string;
 }
 
 export const EMPTY_AI_INFO: AiInfoForm = {
-  services: [{ name: "", price: "", note: "" }],
+  services: [{ name: "", price: "", note: "", instructions: "" }],
   working_hours: "",
   insurance: "",
-  prep: "",
-  sun: "",
-  results: "",
   cancel_policy: "",
   late_policy: "",
 };
@@ -36,23 +31,74 @@ export const EMPTY_AI_INFO: AiInfoForm = {
 // saved structured info yet. All fields are editable.
 export const SAMPLE_AI_INFO: AiInfoForm = {
   services: [
-    { name: "استشارة أولى", price: "50 ₪", note: "تُخصم من قيمة أول جلسة" },
-    { name: "تنظيف بشرة عميق", price: "120 ₪", note: "" },
-    { name: "تقشير كيميائي", price: "200 ₪", note: "للجلسة" },
-    { name: "حقن فيلر (شفايف/خدود)", price: "600 ₪", note: "يبدأ من — حسب الكمية" },
-    { name: "بوتوكس للتجاعيد", price: "500 ₪", note: "يبدأ من — حسب المنطقة" },
-    { name: "ليزر إزالة الشعر", price: "100–250 ₪", note: "حسب حجم المنطقة" },
-    { name: "نضارة وترطيب (ميزوثيرابي)", price: "250 ₪", note: "للجلسة" },
-    { name: "علاج حب الشباب وآثاره", price: "700 ₪", note: "باقة 4 جلسات" },
+    { name: "استشارة أولى", price: "50 ₪", note: "تُخصم من قيمة أول جلسة", instructions: "" },
+    {
+      name: "تنظيف بشرة عميق",
+      price: "120 ₪",
+      note: "",
+      instructions: "يُفضّل الحضور بدون مكياج.",
+    },
+    {
+      name: "تقشير كيميائي",
+      price: "200 ₪",
+      note: "للجلسة",
+      instructions: "تجنّب الشمس المباشرة بعد الجلسة بيومين، واستخدم واقي الشمس.",
+    },
+    {
+      name: "حقن فيلر (شفايف/خدود)",
+      price: "600 ₪",
+      note: "يبدأ من — حسب الكمية",
+      instructions: "تجنّب الضغط على المنطقة، والنتائج تظهر خلال 3–7 أيام.",
+    },
+    {
+      name: "بوتوكس للتجاعيد",
+      price: "500 ₪",
+      note: "يبدأ من — حسب المنطقة",
+      instructions: "تجنّب الاستلقاء والرياضة لمدة 4 ساعات بعد الحقن.",
+    },
+    {
+      name: "ليزر إزالة الشعر",
+      price: "100–250 ₪",
+      note: "حسب حجم المنطقة",
+      instructions: "تجنّب الشمس قبل وبعد الجلسة بيومين، ولا تنزع الشعر بالشمع قبلها.",
+    },
+    {
+      name: "نضارة وترطيب (ميزوثيرابي)",
+      price: "250 ₪",
+      note: "للجلسة",
+      instructions: "الحضور بدون مكياج، واشرب ماءً كافياً بعد الجلسة.",
+    },
+    {
+      name: "علاج حب الشباب وآثاره",
+      price: "700 ₪",
+      note: "باقة 4 جلسات",
+      instructions: "الالتزام بالجلسات المتتابعة للحصول على أفضل نتيجة.",
+    },
   ],
   working_hours: "السبت – الخميس: 9 صباحاً – 5 مساءً · الجمعة: إجازة",
   insurance: "لا نتعامل مع تأمين طبي حالياً — الدفع نقداً أو تحويل.",
-  prep: "يُفضّل الحضور بدون مكياج قبل جلسات البشرة والليزر.",
-  sun: "تجنّب الشمس المباشرة قبل وبعد جلسة الليزر بيومين.",
-  results: "نتائج الفيلر والبوتوكس تظهر خلال 3–7 أيام.",
   cancel_policy: "الرجاء الإلغاء قبل الموعد بـ 3 ساعات على الأقل.",
   late_policy: "التأخر أكثر من 15 دقيقة قد يؤجّل الموعد حسب الجدول.",
 };
+
+// Tolerates older saved forms (missing per-service instructions).
+export function normalizeAiInfo(raw: unknown): AiInfoForm | null {
+  if (!raw || typeof raw !== "object") return null;
+  const f = raw as Partial<AiInfoForm>;
+  if (!Array.isArray(f.services)) return null;
+  return {
+    services: f.services.map((s) => ({
+      name: s?.name ?? "",
+      price: s?.price ?? "",
+      note: s?.note ?? "",
+      instructions: s?.instructions ?? "",
+    })),
+    working_hours: f.working_hours ?? "",
+    insurance: f.insurance ?? "",
+    cancel_policy: f.cancel_policy ?? "",
+    late_policy: f.late_policy ?? "",
+  };
+}
 
 export function assembleAiInfo(
   clinicName: string,
@@ -69,17 +115,14 @@ export function assembleAiInfo(
       const price = s.price.trim() ? `: ${s.price.trim()}` : "";
       const note = s.note.trim() ? ` (${s.note.trim()})` : "";
       lines.push(`• ${s.name.trim()}${price}${note}`);
+      if (s.instructions.trim()) {
+        lines.push(`   تعليمات هذه الخدمة: ${s.instructions.trim()}`);
+      }
     }
   }
 
   if (f.working_hours.trim()) lines.push("", "أوقات العمل:", f.working_hours.trim());
   if (f.insurance.trim()) lines.push("", "التأمين:", f.insurance.trim());
-
-  const patient = [f.prep, f.sun, f.results].map((x) => x.trim()).filter(Boolean);
-  if (patient.length) {
-    lines.push("", "تعليمات المرضى:");
-    for (const p of patient) lines.push(`• ${p}`);
-  }
 
   const policy = [f.cancel_policy, f.late_policy].map((x) => x.trim()).filter(Boolean);
   if (policy.length) {

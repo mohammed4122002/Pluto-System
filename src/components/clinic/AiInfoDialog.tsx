@@ -20,6 +20,7 @@ import { saveAiInfo } from "@/app/clinic/[clinicId]/settings/actions";
 import {
   EMPTY_AI_INFO,
   SAMPLE_AI_INFO,
+  normalizeAiInfo,
   type AiInfoForm,
   type AiInfoService,
 } from "@/lib/ai-info";
@@ -56,7 +57,7 @@ export function AiInfoDialog({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<AiInfoForm>(
-    initialForm ?? (hasContent ? EMPTY_AI_INFO : SAMPLE_AI_INFO)
+    normalizeAiInfo(initialForm) ?? (hasContent ? EMPTY_AI_INFO : SAMPLE_AI_INFO)
   );
 
   function patch(p: Partial<AiInfoForm>) {
@@ -69,7 +70,10 @@ export function AiInfoDialog({
     }));
   }
   function addService() {
-    setForm((f) => ({ ...f, services: [...f.services, { name: "", price: "", note: "" }] }));
+    setForm((f) => ({
+      ...f,
+      services: [...f.services, { name: "", price: "", note: "", instructions: "" }],
+    }));
   }
   function removeService(i: number) {
     setForm((f) => ({ ...f, services: f.services.filter((_, idx) => idx !== i) }));
@@ -135,34 +139,42 @@ export function AiInfoDialog({
                   أمثلة جاهزة
                 </Button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {form.services.map((s, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
-                    <Input
-                      value={s.name}
-                      onChange={(e) => setService(i, "name", e.target.value)}
-                      placeholder="اسم الخدمة"
-                    />
-                    <Input
-                      value={s.price}
-                      onChange={(e) => setService(i, "price", e.target.value)}
-                      placeholder="السعر ₪"
-                      className="w-24"
-                    />
+                  <div key={i} className="space-y-2 rounded-lg border border-border/70 p-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={s.name}
+                        onChange={(e) => setService(i, "name", e.target.value)}
+                        placeholder="اسم الخدمة"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={s.price}
+                        onChange={(e) => setService(i, "price", e.target.value)}
+                        placeholder="السعر ₪"
+                        className="w-28"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeService(i)}
+                        aria-label="حذف الخدمة"
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
                     <Input
                       value={s.note}
                       onChange={(e) => setService(i, "note", e.target.value)}
-                      placeholder="ملاحظة (للجلسة/يبدأ من)"
+                      placeholder="ملاحظة السعر (اختياري: للجلسة / يبدأ من ...)"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeService(i)}
-                      aria-label="حذف"
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    <Input
+                      value={s.instructions}
+                      onChange={(e) => setService(i, "instructions", e.target.value)}
+                      placeholder="تعليمات خاصة بهذه الخدمة (اختياري: قبل/بعد الجلسة، تحضيرات...)"
+                    />
                   </div>
                 ))}
               </div>
@@ -185,28 +197,6 @@ export function AiInfoDialog({
                 value={form.insurance}
                 onChange={(v) => patch({ insurance: v })}
                 placeholder="لا نتعامل مع تأمين طبي — الدفع نقداً أو تحويل"
-              />
-            </section>
-
-            <section className="space-y-3 border-t border-border/60 pt-4">
-              <h4 className="text-sm font-semibold">تعليمات المرضى</h4>
-              <Field
-                label="تعليمات الحضور"
-                value={form.prep}
-                onChange={(v) => patch({ prep: v })}
-                placeholder="الحضور بدون مكياج قبل جلسات البشرة والليزر"
-              />
-              <Field
-                label="تجنّب الشمس"
-                value={form.sun}
-                onChange={(v) => patch({ sun: v })}
-                placeholder="تجنّب الشمس المباشرة قبل وبعد الليزر بيومين"
-              />
-              <Field
-                label="فترة ظهور النتائج"
-                value={form.results}
-                onChange={(v) => patch({ results: v })}
-                placeholder="نتائج الفيلر والبوتوكس تظهر خلال 3–7 أيام"
               />
             </section>
 
