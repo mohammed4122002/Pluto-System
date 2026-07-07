@@ -99,7 +99,7 @@ export async function writeSheetsData(payload: {
   fields?: Record<string, unknown>;
 }) {
   const res = await fetch(
-    `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/data-write`,
+    `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/services-write`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -160,6 +160,40 @@ in `lib/db-adapters/sheets.ts`):
   `op='update_status'` (cancel/complete/no-show) or `op='insert'` (add
   appointment). The appointment status actions + add-appointment form route
   Sheets clinics here. Partial detail-edit is still Supabase-only.
+- **Services Write API** (`/services-write`, POST `{clinic_id, resource,
+  op, ...}`) — separate isolated workflow (never touches the appointment
+  write path) for the services module below. `resource='services'|
+  'absences'`, `op='insert'|'update'|'delete'`. Sheets-only; Supabase
+  clinics write services/absences directly from Next.js. `writeSheetsData`
+  in `lib/db-adapters/sheets.ts` calls it.
+
+## Services + employees module (clinic DB — owner decision)
+
+Services and their staff assignments live in **each clinic's own DB**, not
+the owner project (`lib/clinic-services.ts`). The "employee" IS a login
+account (`platform_users`, owner project) — its per-employee schedule
+(`work_start`/`work_end`/`working_days`) lives on that row; the
+service↔employee link and absences live in the clinic DB and reference the
+`platform_users.id` as a **soft cross-database ref** (no FK).
+
+- **Supabase clinics** (`supabase/clinic-schema.sql`): normalized tables
+  `services`, `service_employees` (many-to-many), `employee_absences`;
+  appointments gain `service_id` + `employee_user_id`. Read/written
+  directly by Next.js — no n8n.
+- **Google Sheets clinics**: tabs `Services` + `Absences` (created once via
+  Sheets API — tabs need a real header row or the append maps nothing).
+  To keep every write an append/update-by-id: `employee_ids` is a
+  comma-separated column on the `Services` row (no mapping tab), and delete
+  is **soft** (a `deleted` column filtered out on read). Reads go through
+  the Data Read API (`resource='services'|'absences'`); writes through the
+  Services Write API.
+
+Dashboard: sidebar **الخدمات** (services CRUD + employee tags) and
+**الموظفون** (per-employee schedule, service badges, manual absences,
+patient/appointment counts), both manager-gated. The doctor/secretary
+"اليوم" page shows an **employee self-panel**: their services, absences,
+patient count, and their patients' upcoming appointments (appointments
+whose `employee_user_id` = their login id).
 
 ## AI receptionist (n8n, built in n8n.cloud — not in this repo)
 

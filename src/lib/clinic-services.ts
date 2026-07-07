@@ -13,6 +13,15 @@ function truthy(v: unknown) {
   return v === true || v === "TRUE" || v === "true" || v === 1 || v === "1";
 }
 
+// Sheets stores service→employee assignment as a comma-separated id column.
+function parseEmployeeIds(v: unknown): string[] {
+  if (!v) return [];
+  return String(v)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function normalizeService(r: Record<string, unknown>): Omit<Service, "employee_ids"> {
   return {
     id: String(r.id ?? r.row_number ?? ""),
@@ -31,22 +40,18 @@ export async function getServices(dbConfig: ClinicDbConfig | null): Promise<Serv
   if (!dbConfig) return null;
 
   if (dbConfig.db_type === "google_sheets") {
-    const [svcRows, mapRows] = await Promise.all([
-      readSheetsResource(dbConfig.clinic_id, "services"),
-      readSheetsResource(dbConfig.clinic_id, "service_employees"),
-    ]);
+    // On Sheets the employee assignment is a comma-separated column on the
+    // Services row itself (not a separate mapping tab), and deletes are soft
+    // (a `deleted` flag) so every write stays an append/update-by-id.
+    const svcRows = await readSheetsResource(dbConfig.clinic_id, "services");
     if (!svcRows) return null;
-    const map = new Map<string, string[]>();
-    for (const m of mapRows ?? []) {
-      const sid = String(m.service_id ?? "");
-      const eid = String(m.employee_user_id ?? "");
-      if (!sid || !eid) continue;
-      map.set(sid, [...(map.get(sid) ?? []), eid]);
-    }
     return svcRows
-      .map(normalizeService)
+      .filter((r) => !truthy(r.deleted))
+      .map((r) => ({
+        ...normalizeService(r),
+        employee_ids: parseEmployeeIds(r.employee_ids),
+      }))
       .filter((s) => s.name)
-      .map((s) => ({ ...s, employee_ids: map.get(s.id) ?? [] }))
       .sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }
 
@@ -100,8 +105,6 @@ export async function createService(dbConfig: ClinicDbConfig, input: ServiceInpu
     return;
   }
   if (dbConfig.db_type === "google_sheets") {
-    // n8n inserts the row and returns nothing; it also owns id generation.
-    // We pass employee_ids so the endpoint can also seed service_employees.
     await writeSheetsData({
       clinicId: dbConfig.clinic_id,
       resource: "services",
@@ -112,7 +115,7 @@ export async function createService(dbConfig: ClinicDbConfig, input: ServiceInpu
         duration_minutes: input.duration_minutes,
         price: input.price ?? "",
         active: input.active,
-        employee_ids: input.employee_ids,
+        employee_ids: input.employee_ids.join(","),
       },
     });
     return;
@@ -153,7 +156,7 @@ export async function updateService(
         duration_minutes: input.duration_minutes,
         price: input.price ?? "",
         active: input.active,
-        employee_ids: input.employee_ids,
+        employee_ids: input.employee_ids.join(","),
       },
     });
     return;
