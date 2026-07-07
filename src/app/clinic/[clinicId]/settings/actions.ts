@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
+import { assembleAiInfo, type AiInfoForm } from "@/lib/ai-info";
 
 export async function updateClinicInfo(clinicId: string, formData: FormData) {
   await requireClinicRole(clinicId, ["manager"]);
@@ -20,7 +21,6 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
       city: String(formData.get("city") ?? "").trim() || null,
       address: String(formData.get("address") ?? "").trim() || null,
       phone: String(formData.get("phone") ?? "").trim() || null,
-      ai_info_text: String(formData.get("ai_info_text") ?? "").trim() || null,
     })
     .eq("id", clinicId)
     .select("id");
@@ -30,6 +30,33 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
 
   revalidatePath(`/clinic/${clinicId}/settings`);
   revalidatePath(`/clinic/${clinicId}`);
+}
+
+// Saves the structured AI-info form and the assembled AI-readable text the
+// agent reads. Assembly happens server-side so it can't be tampered with and
+// stays consistent with the stored form.
+export async function saveAiInfo(clinicId: string, form: AiInfoForm) {
+  await requireClinicRole(clinicId, ["manager"]);
+  const supabase = await createClient();
+
+  const { data: clinic } = await supabase
+    .from("clinics")
+    .select("name, doctor_name")
+    .eq("id", clinicId)
+    .single();
+
+  const text = assembleAiInfo(clinic?.name ?? "", clinic?.doctor_name ?? "", form);
+
+  const { data, error } = await supabase
+    .from("clinics")
+    .update({ ai_info_form: form, ai_info_text: text })
+    .eq("id", clinicId)
+    .select("id");
+
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("تعذّر الحفظ — لا تملك صلاحية تعديل هذه العيادة");
+
+  revalidatePath(`/clinic/${clinicId}/settings`);
 }
 
 export async function updateAutomation(clinicId: string, formData: FormData) {

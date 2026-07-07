@@ -54,6 +54,7 @@ export interface Clinic {
   status: ClinicStatus;
   notes?: string;
   ai_info_text?: string | null;
+  ai_info_form?: unknown;
   created_at: string;
   // joined
   subscription?: Subscription;

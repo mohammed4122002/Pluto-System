@@ -52,26 +52,6 @@ export function ClinicInfoForm({ clinic }: { clinic: Clinic }) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="ai_info_text">معلومات إضافية للمساعد الذكي</Label>
-        <textarea
-          id="ai_info_text"
-          name="ai_info_text"
-          rows={7}
-          defaultValue={clinic.ai_info_text ?? ""}
-          placeholder={
-            "اكتب هنا أي معلومات تريد أن يعرفها المساعد الذكي ويجيب بها المرضى:\n" +
-            "• الخدمات والأسعار\n• شركات التأمين المقبولة\n• تعليمات الوصول والمواقف\n" +
-            "• أيام الإجازات\n• أي شيء آخر يسأل عنه المرضى عادةً"
-          }
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <p className="text-xs text-muted-foreground">
-          المساعد الذكي في واتساب وتيليجرام يقرأ هذا النص ويستخدمه للرد على استفسارات
-          المرضى — كلما كتبت تفاصيل أكثر كانت إجاباته أدق.
-        </p>
-      </div>
-
       <Button type="submit" disabled={isPending}>
         {isPending ? "جارٍ الحفظ..." : "حفظ معلومات العيادة"}
       </Button>

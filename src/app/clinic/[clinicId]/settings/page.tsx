@@ -5,7 +5,9 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClinicSettingsForm } from "@/components/clinic/ClinicSettingsForm";
 import { ClinicInfoForm } from "@/components/clinic/ClinicInfoForm";
+import { AiInfoDialog } from "@/components/clinic/AiInfoDialog";
 import { ClinicStaffManager } from "@/components/admin/ClinicStaffManager";
+import type { AiInfoForm } from "@/lib/ai-info";
 import type { Clinic, ClinicAutomation } from "@/types";
 
 export default async function ClinicSettingsPage({
@@ -41,8 +43,15 @@ export default async function ClinicSettingsPage({
         <CardHeader>
           <CardTitle className="text-base">معلومات العيادة والمساعد الذكي</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {clinic ? <ClinicInfoForm clinic={clinic as Clinic} /> : null}
+          {clinic ? (
+            <AiInfoDialog
+              clinicId={clinicId}
+              initialForm={(clinic as Clinic).ai_info_form as AiInfoForm | null}
+              hasContent={Boolean((clinic as Clinic).ai_info_text)}
+            />
+          ) : null}
         </CardContent>
       </Card>
 
