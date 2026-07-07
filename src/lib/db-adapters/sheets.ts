@@ -19,9 +19,17 @@ const N8N_READ_SECRET =
 // Google Sheets clinics can't be read directly from Next.js (only n8n holds
 // the Google credential), so the dashboard reads their data through a small
 // always-on n8n endpoint that returns the requested tab's rows as JSON.
+export type SheetsResource =
+  | "appointments"
+  | "patients"
+  | "reviews"
+  | "services"
+  | "service_employees"
+  | "absences";
+
 export async function readSheetsResource(
   clinicId: string,
-  resource: "appointments" | "patients" | "reviews"
+  resource: SheetsResource
 ): Promise<Record<string, unknown>[] | null> {
   try {
     const res = await fetch(
@@ -69,6 +77,39 @@ export async function writeSheetsAppointment(payload: {
         patient_phone: payload.patient_phone,
         appointment_time: payload.appointment_time,
         notes: payload.notes,
+        secret: N8N_READ_SECRET,
+      }),
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("تعذّر حفظ التغيير في جدول العيادة");
+}
+
+// Generic write for the services/employees resources (services,
+// service_employees, absences). op is one of insert/update/delete;
+// `fields` carries the row payload, `id`/`match` identify the target row.
+// The n8n data-write endpoint branches on resource+op the same way it does
+// for appointments.
+export async function writeSheetsData(payload: {
+  clinicId: string;
+  resource: SheetsResource;
+  op: "insert" | "update" | "delete";
+  id?: string;
+  match?: Record<string, string>;
+  fields?: Record<string, unknown>;
+}) {
+  const res = await fetch(
+    `${N8N_WEBHOOK_BASE}/8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/data-write`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clinic_id: payload.clinicId,
+        resource: payload.resource,
+        op: payload.op,
+        id: payload.id,
+        match: payload.match,
+        fields: payload.fields,
         secret: N8N_READ_SECRET,
       }),
       cache: "no-store",

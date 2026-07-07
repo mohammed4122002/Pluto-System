@@ -14,6 +14,8 @@ import {
   MessageCircle,
   MessagesSquare,
   Users,
+  Stethoscope,
+  UserCog,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -28,6 +30,8 @@ const NAV_ITEMS: { href: string; label: string; icon: typeof CalendarClock; role
   { href: "", label: "اليوم", icon: CalendarClock, roles: ["owner", "manager", "doctor", "secretary"] },
   { href: "/conversations", label: "المحادثات", icon: MessagesSquare, roles: ["manager", "doctor", "secretary"] },
   { href: "/appointments", label: "المواعيد", icon: ClipboardList, roles: ["owner", "manager", "secretary"] },
+  { href: "/services", label: "الخدمات", icon: Stethoscope, roles: ["owner", "manager"] },
+  { href: "/employees", label: "الموظفون", icon: UserCog, roles: ["owner", "manager"] },
   { href: "/patients", label: "المرضى", icon: Users, roles: ["owner", "manager", "secretary", "doctor"] },
   { href: "/reminders", label: "التذكيرات", icon: BellRing, roles: ["owner", "manager", "secretary"] },
   { href: "/ratings", label: "التقييمات", icon: Star, roles: ["owner", "manager", "doctor"] },

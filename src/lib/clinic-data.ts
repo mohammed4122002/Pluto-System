@@ -93,6 +93,8 @@ function normalizeSheetAppointment(r: Record<string, unknown>): Appointment {
     rating_sent: truthy(r.rating_sent),
     rating_sent_at: r.rating_sent_at ? String(r.rating_sent_at) : undefined,
     notes: r.notes ? String(r.notes) : undefined,
+    service_id: r.service_id ? String(r.service_id) : null,
+    employee_user_id: r.employee_user_id ? String(r.employee_user_id) : null,
     created_at: String(r.created_at ?? ""),
   };
 }

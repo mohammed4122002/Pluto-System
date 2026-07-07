@@ -42,3 +42,41 @@ CREATE TABLE reviews (
   comment         TEXT,
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Services this clinic offers (owner decision: services live in the clinic's
+-- OWN DB, not the owner project). Managed from the clinic dashboard.
+CREATE TABLE services (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name              TEXT NOT NULL,
+  description       TEXT,
+  duration_minutes  INTEGER DEFAULT 30,
+  price             NUMERIC(10,2),
+  active            BOOLEAN DEFAULT TRUE,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Which employees perform each service (many-to-many). employee_user_id is a
+-- soft cross-database reference to platform_users.id in the OWNER project —
+-- the employee IS a login account there, so no FK is possible/desired here.
+CREATE TABLE service_employees (
+  service_id        UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  employee_user_id  UUID NOT NULL,
+  PRIMARY KEY (service_id, employee_user_id)
+);
+
+-- Manual employee absences (manager-entered). Excludes that employee from
+-- availability on the given day. employee_user_id -> owner platform_users.id.
+CREATE TABLE employee_absences (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_user_id  UUID NOT NULL,
+  absence_date      DATE NOT NULL,
+  reason            TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Link appointments to the chosen service + the employee performing it. Both
+-- nullable so pre-existing appointments (and quick walk-ins) still validate.
+-- employee_user_id -> owner platform_users.id (soft ref).
+ALTER TABLE appointments
+  ADD COLUMN IF NOT EXISTS service_id        UUID REFERENCES services(id),
+  ADD COLUMN IF NOT EXISTS employee_user_id  UUID;

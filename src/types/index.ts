@@ -29,6 +29,36 @@ export interface Appointment {
   rating_sent: boolean;
   rating_sent_at?: string;
   notes?: string;
+  service_id?: string | null;
+  employee_user_id?: string | null;
+  created_at: string;
+}
+
+// Rows from the clinic's OWN DB (services live there — owner decision).
+export interface Service {
+  id: string;
+  name: string;
+  description?: string | null;
+  duration_minutes: number;
+  price?: number | null;
+  active: boolean;
+  created_at: string;
+  // joined: platform_users.id of the employees who perform it
+  employee_ids?: string[];
+}
+
+// service_employees mapping row (clinic DB). employee_user_id is a soft ref to
+// platform_users.id in the owner project.
+export interface ServiceEmployee {
+  service_id: string;
+  employee_user_id: string;
+}
+
+export interface EmployeeAbsence {
+  id: string;
+  employee_user_id: string;
+  absence_date: string;
+  reason?: string | null;
   created_at: string;
 }
 
@@ -140,6 +170,10 @@ export interface PlatformUser {
   email?: string;
   avatar_url?: string;
   is_active: boolean;
+  // Per-employee schedule (the employee IS this login account).
+  work_start?: string | null; // "HH:MM"
+  work_end?: string | null; // "HH:MM"
+  working_days?: number[] | null; // 0=Sun .. 6=Sat
 }
 
 export interface N8nExecutionLog {
