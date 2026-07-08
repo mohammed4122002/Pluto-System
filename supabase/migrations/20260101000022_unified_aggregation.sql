@@ -421,6 +421,35 @@ BEGIN
   WHERE id = p_id AND content_hash IS NOT DISTINCT FROM p_content_hash;
 END; $$;
 
+-- Instant unified consistency after a dashboard write that already wrote the
+-- clinic source directly (sheet/supabase). Marks the row synced so Sync Export
+-- won't re-push it; the next Sync Import sees an unchanged hash. Best-effort
+-- companion to the server actions (they call this over PostgREST RPC).
+CREATE OR REPLACE FUNCTION dashboard_mirror_appointment(
+  p_clinic_id uuid, p_external_id text, p_data jsonb
+) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE v_hash text;
+BEGIN
+  v_hash := md5(
+    coalesce(p_data->>'patient_name','')     || '|' ||
+    coalesce(p_data->>'patient_phone','')    || '|' ||
+    coalesce(p_data->>'appointment_time','') || '|' ||
+    coalesce(p_data->>'status','')           || '|' ||
+    coalesce(p_data->>'notes',''));
+  UPDATE unified_appointments SET
+    patient_name     = coalesce(p_data->>'patient_name', patient_name),
+    patient_phone    = coalesce(p_data->>'patient_phone', patient_phone),
+    appointment_time = coalesce(try_timestamptz(p_data->>'appointment_time'), appointment_time),
+    status           = coalesce(nullif(p_data->>'status',''), status),
+    notes            = coalesce(p_data->>'notes', notes),
+    content_hash     = v_hash,
+    origin           = 'dashboard',
+    sync_status      = 'synced',
+    updated_at       = now(),
+    synced_at        = now()
+  WHERE clinic_id = p_clinic_id AND external_id = p_external_id;
+END; $$;
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security (mirror the existing owner_all / clinic_staff_select
 -- pattern; writes happen server-side via the service role which bypasses RLS)
