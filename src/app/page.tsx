@@ -2,13 +2,16 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BellRing,
+  Bot,
   CalendarClock,
   Check,
   Database,
   LayoutDashboard,
   Lock,
   MessageCircle,
+  Send,
   ShieldCheck,
+  Sparkles,
   Star,
   Users,
   Zap,
@@ -26,6 +29,7 @@ import { PLANS } from "@/lib/pricing";
 
 const INTEGRATIONS = [
   { icon: MessageCircle, label: "WhatsApp Business" },
+  { icon: Send, label: "Telegram" },
   { icon: Database, label: "Supabase" },
   { icon: Workflow, label: "n8n" },
   { icon: Server, label: "SQL Server" },
@@ -34,10 +38,22 @@ const INTEGRATIONS = [
 
 const features = [
   {
+    icon: Bot,
+    title: "سكرتير ذكاء اصطناعي يرد على مرضاك",
+    description:
+      "مساعد محادثة على واتساب وتيليجرام يجيب على أسئلة المرضى ويحجز ويلغي المواعيد بلغة طبيعية — على مدار الساعة وبأسلوب موظف الاستقبال الحقيقي.",
+  },
+  {
+    icon: Sparkles,
+    title: "تحليلات وتنبيهات تلقائية بالذكاء الاصطناعي",
+    description:
+      "ملخص يومي لأداء كل عيادة مع تنبيهات (ارتفاع نسبة عدم الحضور، لا مواعيد قادمة) وتوصيات عملية — يقرأ بياناتك ويخبرك بما يستحق انتباهك.",
+  },
+  {
     icon: BellRing,
     title: "تذكير تلقائي بالمواعيد",
     description:
-      "رسالة واتساب تصل للمريض قبل موعده بالوقت الذي تحدده أنت — بدون أي تدخل من موظفيك، وبدون مواعيد ضائعة.",
+      "رسالة واتساب أو تيليجرام تصل للمريض قبل موعده بالوقت الذي تحدده أنت — مع أزرار تأكيد/إلغاء، وبدون أي تدخل من موظفيك.",
   },
   {
     icon: Star,
@@ -53,9 +69,9 @@ const features = [
   },
   {
     icon: Database,
-    title: "يعمل مع نظامك الحالي",
+    title: "قاعدة بيانات موحّدة تزامن في الاتجاهين",
     description:
-      "Supabase أو SQL Server أو حتى Google Sheets — نتصل بقاعدة بيانات عيادتك كما هي، بدون تغيير طريقة عملك.",
+      "نجمع بيانات عيادتك من Supabase أو SQL Server أو Google Sheets في مكان واحد، وأي تعديل في اللوحة يتزامن تلقائياً مع نظامك والعكس — بدون تغيير طريقة عملك.",
   },
   {
     icon: Users,
@@ -159,7 +175,7 @@ export default function LandingPage() {
                 className="mb-6 gap-1.5 border-emerald-200/70 bg-gradient-to-b from-emerald-50 to-emerald-50/50 px-3.5 py-1.5 text-emerald-700 shadow-brand-sm dark:border-emerald-800/40 dark:from-emerald-950/40 dark:text-emerald-300"
               >
                 <Zap className="size-3.5 fill-emerald-500 text-emerald-500" />
-                أتمتة واتساب للعيادات — بدون أي جهد تقني
+                منصة عيادات مدعومة بالذكاء الاصطناعي — بدون أي جهد تقني
               </Badge>
 
               <h1 className="text-balance text-4xl font-extrabold leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.4rem]">
@@ -171,9 +187,9 @@ export default function LandingPage() {
               </h1>
 
               <p className="mx-auto mt-5 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground lg:mx-0">
-                تذكير بالمواعيد قبلها بساعات، وطلب تقييم بعد كل زيارة — كل ذلك
-                عبر واتساب وبشكل آلي بالكامل، لتقليل المواعيد الضائعة ورفع رضا
-                مرضاك.
+                سكرتير ذكاء اصطناعي يرد على مرضاك ويحجز المواعيد، وتذكير قبل كل
+                موعد، وطلب تقييم بعد كل زيارة — عبر واتساب وتيليجرام وبشكل آلي
+                بالكامل، مع لوحة تحكم وتحليلات ذكية لكل عيادة.
               </p>
 
               <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:justify-start sm:justify-center">
