@@ -479,3 +479,9 @@ CREATE POLICY "clinic_staff_select" ON column_mappings FOR SELECT USING (clinic_
 CREATE POLICY "owner_all" ON ai_insights FOR ALL USING (app_is_owner());
 CREATE POLICY "clinic_staff_select" ON ai_insights FOR SELECT
   USING (clinic_id = app_clinic_id() OR clinic_id IS NULL);
+
+-- Security hardening: clinics_config is read only by service_role (the app's
+-- admin client and the n8n workflows), which bypasses RLS. Running the view as
+-- security_invoker closes the "SECURITY DEFINER view bypasses RLS" advisor
+-- (0010) without affecting those readers.
+ALTER VIEW public.clinics_config SET (security_invoker = on);

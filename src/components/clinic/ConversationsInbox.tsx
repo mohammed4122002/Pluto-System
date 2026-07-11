@@ -94,6 +94,10 @@ export function ConversationsInbox({
 
   useEffect(() => {
     if (!activeId) return;
+    // loadThread is async — its setState runs after the fetch resolves, so this
+    // is not a synchronous cascading render (the lint rule is a false positive
+    // for this data-fetch-on-change + poll pattern).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadThread(activeId);
     const t = setInterval(() => loadThread(activeId), 15000);
     return () => clearInterval(t);
