@@ -38,7 +38,12 @@ export function Step3_Database({ data, update }: StepProps) {
       if (!res.ok || !json.ok) throw new Error(json.error ?? "فشل الاتصال");
       toast.success("تم الاتصال بنجاح");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "فشل الاتصال");
+      // The connection test is an optional convenience check that runs through
+      // n8n — it does NOT gate clinic creation. Make that explicit so a failed
+      // (or rate-limited) check doesn't look like a hard block.
+      toast.error(
+        `${err instanceof Error ? err.message : "فشل الاتصال"} — هذا الفحص اختياري، يمكنك المتابعة والضغط على "التالي".`
+      );
     } finally {
       setTesting(false);
     }
@@ -200,10 +205,22 @@ export function Step3_Database({ data, update }: StepProps) {
         </CardContent>
       </Card>
 
-      <Button type="button" variant="secondary" onClick={handleTest} disabled={testing}>
-        {testing ? <Loader2 className="size-4 animate-spin" /> : null}
-        اختبار الاتصال
-      </Button>
+      <div className="flex flex-col gap-1.5">
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-fit"
+          onClick={handleTest}
+          disabled={testing}
+        >
+          {testing ? <Loader2 className="size-4 animate-spin" /> : null}
+          اختبار الاتصال (اختياري)
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          فحص اختياري للتأكد من الوصول للبيانات. لست مضطراً لنجاحه — يمكنك المتابعة
+          والضغط على &quot;التالي&quot; في كل الأحوال.
+        </p>
+      </div>
     </div>
   );
 }
