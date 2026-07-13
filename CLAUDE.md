@@ -62,36 +62,54 @@ vars — but when working live in Supabase MCP / n8n MCP, use these:
   by the n8n workflow — `lib/db-adapters/mssql.ts` and `sheets.ts` just
   validate config, they don't open a live connection.
 
-## Unified sync (owner project — Google Sheets clinics only, so far)
+## Unified aggregation layer (owner project — the dashboard's single read path)
 
-Built directly in n8n (not by hand in this repo, but schema tracked in
-`supabase/migrations/20260101000022/23_unified_sync_*.sql`) to stop the
-dashboard depending on live n8n round-trips for Sheets clinics:
+Owner-decision architecture change (`supabase/migrations/20260101000022_
+unified_aggregation.sql` + `..._hardening.sql`): the owner project now keeps
+an aggregated mirror of every clinic's data — `unified_patients`,
+`unified_appointments`, `unified_reviews` — regardless of the clinic's
+backend (`google_sheets` / `supabase` / `sql_server`). **This is now the
+dashboard's read path** (`lib/clinic-data.ts` reads `unified_*` directly via
+the admin client, not the n8n Data Read API), so Sheets clinics no longer
+depend on a live n8n round-trip just to render a page.
 
-- `unified_appointments` / `unified_reviews` — owner-project mirror of a
-  Sheets clinic's Appointments/Reviews tabs. `sync_status`: `synced` |
-  `pending_out` (dashboard edited, not yet pushed back) | `local_only`.
-  `content_hash` + `external_id` (the sheet row's `id`) drive dedup/conflict
-  resolution — last-write-wins, but an import never clobbers a row still
-  `pending_out`.
-- `column_mappings` — AI-detected (GPT) mapping from a clinic's actual sheet
-  headers to the canonical field names, cached per clinic+resource so the
-  model runs once per sheet shape, not every sync tick.
-- `ai_insights` — daily GPT-generated Arabic summary + alerts +
-  recommendations per clinic, from the `clinic_metrics()` RPC.
-- n8n workflows: **Sync Import** (15 min, Sheets → unified, AI column
-  mapping), **Sync Import Reviews** (15 min), **Sync Export** (5 min,
-  unified → Sheets for `pending_out` rows), **AI Insights** (daily 06:00).
-- RPCs are `SECURITY DEFINER` and locked to `service_role` only
-  (`sync_import_appointments_bulk`, `sync_import_reviews_bulk`,
-  `sync_mark_exported`) except `clinic_metrics`, which `authenticated` can
-  also call — but only for their own `clinic_id` (checked inside the
-  function against `app_is_owner()`/`app_clinic_id()`).
-- **Not yet wired into the Next.js dashboard reads/writes** — `lib/
-  clinic-data.ts` still reads Sheets clinics via the n8n Data Read API for
-  appointments/reviews. Switching those reads (and appointment writes) to
-  the unified tables is the next step to fully remove the n8n dependency
-  from normal dashboard use.
+- Each unified row carries `raw` (JSONB, the original source row),
+  `content_hash` (md5 of the canonical fields, drives dedup), `origin`
+  (`sheet` | `dashboard`), `sync_status` (`synced` | `pending_out`), and
+  `external_id` (the source row's own id — `NULL` until a dashboard-created
+  row is first exported to the sheet).
+- **Import** (source → unified): n8n's **Sync Import** (15 min, + AI column
+  mapping cached in `column_mappings`) and **Sync Import Reviews** (15 min)
+  call `sync_import_appointments_bulk` / `sync_import_reviews_bulk`, which
+  loop `sync_import_appointment` / `_patient` / `_review` per row. Conflict
+  rule: dashboard wins — a row still `pending_out` is left untouched
+  (`skipped_pending_out`) rather than overwritten by a concurrent sheet
+  value.
+- **Export** (unified → source): n8n's **Sync Export** (5 min) pushes
+  `pending_out` rows back to the clinic's sheet, then calls
+  `sync_mark_exported` to clear the flag.
+- **Dashboard writes**: server actions in `src/app/clinic/[clinicId]/
+  appointments/actions.ts` write the clinic's own source directly (Sheets via
+  `writeSheetsAppointment`, Supabase clinics via their own client) *and* call
+  `dashboard_mirror_appointment` (RPC, best-effort) so the unified mirror
+  reflects the change instantly instead of waiting for the next Sync Import.
+  `dashboard_write_appointment` is the RPC for a pure dashboard-originated
+  insert/update with no direct source write (marks `pending_out` so Sync
+  Export pushes it out).
+- `sync_state` — per clinic+resource+direction bookkeeping (last run,
+  counts, errors) for the sync workflows.
+- `ai_insights` + `clinic_metrics()` RPC — daily GPT-generated Arabic
+  summary + alerts + recommendations per clinic (n8n **AI Insights**, daily
+  06:00). `clinic_metrics` is the one RPC in this group `authenticated` can
+  call directly, and only for its own `clinic_id` (checked against
+  `app_is_owner()`/`app_clinic_id()` inside the function) — every other RPC
+  here (`sync_import_*`, `dashboard_write_appointment`,
+  `dashboard_mirror_appointment`, `sync_mark_exported`) is `service_role`
+  only, called by n8n or by Next.js through the admin client.
+- Not yet unified: **services/employees/absences** (still per-clinic-DB /
+  per-Sheets-tabs — see the module below) and the **AI receptionist tools**
+  (Get/Book/Cancel Appointment) still read/write each clinic's own source
+  directly rather than the unified tables.
 
 ## Roles
 
