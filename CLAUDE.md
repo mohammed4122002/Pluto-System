@@ -22,12 +22,38 @@ analytics/AI insights. Messenger/Instagram: wire the UI toggle and persist
 to DB only — n8n doesn't send on those channels yet. WhatsApp and Telegram
 both fully work (reminders, ratings, and the AI receptionist below).
 
+## Infrastructure accounts (changed 2026-07-13 — don't assume the old ones)
+
+The owner's Supabase project and n8n account were both migrated to fresh
+accounts. Never hardcode a project ref/host in code — always go through env
+vars — but when working live in Supabase MCP / n8n MCP, use these:
+
+- **Owner Supabase project:** `ylvowifrvhkgtvxllghg` (org `plutosystems`).
+  The previous project (`yihumcfjgvelcozbiqib`) is no longer accessible from
+  this environment.
+- **n8n:** self-hosted on Hostinger, `https://n8n-quc4.srv1825882.hstgr.cloud`
+  (previously n8n Cloud, which hit its free-tier execution cap repeatedly —
+  self-hosting removes that ceiling). Credentials in that instance: "MediSync
+  Owner Supabase" (Supabase API), "MediSync Google Sheets" (OAuth2), "MediSync
+  OpenAI".
+- The Google Cloud project behind the Google Sheets OAuth credential must
+  have the Sheets API enabled (`console.developers.google.com/apis/api/
+  sheets.googleapis.com`) — a fresh Google Cloud project does not enable it
+  by default, and every Sheets-reading node fails until it's turned on.
+- **n8n Workflow SDK gotcha:** `update_workflow`'s `setNodeParameter` `path`
+  is relative to the node's `parameters` object — use `path: "/url"`, not
+  `path: "/parameters/url"`. The latter silently creates a dead nested
+  `parameters.parameters.url` instead of overwriting the real field, so the
+  node keeps using its old value with no error at edit time.
+
 ## Two databases, don't confuse them
 
 - **Owner's Supabase project** (`lib/supabase/{client,server,admin}.ts`) —
   platform data: `clinics`, `clinic_channels`, `clinic_db_config`,
   `clinic_automation`, `subscriptions`, `platform_users`,
-  `n8n_execution_log`, `wa_sessions`, and the `clinics_config` view.
+  `n8n_execution_log`, `wa_sessions`, and the `clinics_config` view. Also
+  now holds the **unified sync tables** (see below) that mirror Sheets-clinic
+  appointments/reviews so the dashboard never has to call n8n on page load.
   Migrations: `supabase/migrations/*.sql`, run in filename order.
 - **Each clinic's own DB** (`lib/db-adapters/*`) — `patients`,
   `appointments`, `reviews`. Only reachable directly from Next.js when
@@ -35,6 +61,37 @@ both fully work (reminders, ratings, and the AI receptionist below).
   project per clinic). SQL Server and Google Sheets clinics are read only
   by the n8n workflow — `lib/db-adapters/mssql.ts` and `sheets.ts` just
   validate config, they don't open a live connection.
+
+## Unified sync (owner project — Google Sheets clinics only, so far)
+
+Built directly in n8n (not by hand in this repo, but schema tracked in
+`supabase/migrations/20260101000022/23_unified_sync_*.sql`) to stop the
+dashboard depending on live n8n round-trips for Sheets clinics:
+
+- `unified_appointments` / `unified_reviews` — owner-project mirror of a
+  Sheets clinic's Appointments/Reviews tabs. `sync_status`: `synced` |
+  `pending_out` (dashboard edited, not yet pushed back) | `local_only`.
+  `content_hash` + `external_id` (the sheet row's `id`) drive dedup/conflict
+  resolution — last-write-wins, but an import never clobbers a row still
+  `pending_out`.
+- `column_mappings` — AI-detected (GPT) mapping from a clinic's actual sheet
+  headers to the canonical field names, cached per clinic+resource so the
+  model runs once per sheet shape, not every sync tick.
+- `ai_insights` — daily GPT-generated Arabic summary + alerts +
+  recommendations per clinic, from the `clinic_metrics()` RPC.
+- n8n workflows: **Sync Import** (15 min, Sheets → unified, AI column
+  mapping), **Sync Import Reviews** (15 min), **Sync Export** (5 min,
+  unified → Sheets for `pending_out` rows), **AI Insights** (daily 06:00).
+- RPCs are `SECURITY DEFINER` and locked to `service_role` only
+  (`sync_import_appointments_bulk`, `sync_import_reviews_bulk`,
+  `sync_mark_exported`) except `clinic_metrics`, which `authenticated` can
+  also call — but only for their own `clinic_id` (checked inside the
+  function against `app_is_owner()`/`app_clinic_id()`).
+- **Not yet wired into the Next.js dashboard reads/writes** — `lib/
+  clinic-data.ts` still reads Sheets clinics via the n8n Data Read API for
+  appointments/reviews. Switching those reads (and appointment writes) to
+  the unified tables is the next step to fully remove the n8n dependency
+  from normal dashboard use.
 
 ## Roles
 
