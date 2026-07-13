@@ -9,7 +9,7 @@ import type { ClinicDbConfig } from "@/types";
 // since only n8n holds the Google credential; this calls a small always-on
 // n8n endpoint that tries to read the clinic's Appointments tab.
 const N8N_WEBHOOK_BASE =
-  process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL ?? "https://admin12121.app.n8n.cloud/webhook";
+  process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL ?? "https://asd123.app.n8n.cloud/webhook";
 
 // Shared secret gating the n8n data-read endpoint. Server-only; set
 // MEDISYNC_N8N_READ_SECRET in the deploy env to override the default.

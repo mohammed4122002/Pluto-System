@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClinicSupabaseClient } from "@/lib/db-adapters/supabase";
 import { readSheetsResource } from "@/lib/db-adapters/sheets";
 import type { Appointment, Clinic, ClinicDbConfig, Review } from "@/types";
@@ -110,6 +111,98 @@ function normalizeSheetReview(r: Record<string, unknown>): Review {
   };
 }
 
+// ── Unified owner-side aggregation (the single source the dashboard reads) ──
+// Every clinic's data — whatever its backend — is mirrored into the owner
+// project's unified_* tables by the n8n Sync Import workflow (+ instant
+// mirror-on-write from server actions). Reading here means the dashboard
+// shows one aggregated view regardless of db_type. `id` is exposed as the
+// source row's id (external_id) so existing write paths keep matching.
+type UnifiedAppointmentRow = {
+  id: string;
+  external_id: string | null;
+  patient_name: string | null;
+  patient_phone: string | null;
+  appointment_time: string | null;
+  duration_minutes: number | null;
+  status: string | null;
+  reminder_sent: boolean | null;
+  rating_sent: boolean | null;
+  notes: string | null;
+  created_at: string | null;
+  raw: Record<string, unknown> | null;
+};
+
+function mapUnifiedAppointment(u: UnifiedAppointmentRow): Appointment {
+  const raw = u.raw ?? {};
+  return {
+    id: String(u.external_id ?? u.id),
+    patient_name: u.patient_name ?? "",
+    patient_phone: u.patient_phone ?? "",
+    appointment_time: u.appointment_time ?? "",
+    duration_minutes: Number(u.duration_minutes) || 30,
+    status: (u.status ?? "scheduled") as Appointment["status"],
+    reminder_sent: u.reminder_sent === true,
+    reminder_sent_at: raw.reminder_sent_at ? String(raw.reminder_sent_at) : undefined,
+    rating_sent: u.rating_sent === true,
+    rating_sent_at: raw.rating_sent_at ? String(raw.rating_sent_at) : undefined,
+    notes: u.notes ?? undefined,
+    service_id: raw.service_id ? String(raw.service_id) : null,
+    employee_user_id: raw.employee_user_id ? String(raw.employee_user_id) : null,
+    created_at: String(raw.created_at ?? u.created_at ?? ""),
+  };
+}
+
+async function getUnifiedAppointments(
+  clinicId: string,
+  options: { from?: Date; to?: Date } = {}
+): Promise<Appointment[] | null> {
+  try {
+    const admin = getAdminSupabase();
+    let query = admin
+      .from("unified_appointments")
+      .select(
+        "id,external_id,patient_name,patient_phone,appointment_time,duration_minutes,status,reminder_sent,rating_sent,notes,created_at,raw"
+      )
+      .eq("clinic_id", clinicId)
+      .eq("deleted", false)
+      .order("appointment_time", { ascending: true });
+
+    if (options.from) query = query.gte("appointment_time", options.from.toISOString());
+    if (options.to) query = query.lte("appointment_time", options.to.toISOString());
+
+    const { data, error } = await query;
+    if (error || !data) return null;
+    return (data as UnifiedAppointmentRow[]).map(mapUnifiedAppointment);
+  } catch {
+    return null;
+  }
+}
+
+async function getUnifiedReviews(clinicId: string): Promise<Review[] | null> {
+  try {
+    const admin = getAdminSupabase();
+    const { data, error } = await admin
+      .from("unified_reviews")
+      .select("id,external_id,appointment_external_id,patient_phone,stars,comment,created_at,raw")
+      .eq("clinic_id", clinicId)
+      .eq("deleted", false)
+      .order("created_at", { ascending: false });
+    if (error || !data) return null;
+    return (data as Array<Record<string, unknown>>).map((u) => ({
+      id: String(u.external_id ?? u.id),
+      appointment_id: u.appointment_external_id ? String(u.appointment_external_id) : undefined,
+      patient_phone: u.patient_phone ? String(u.patient_phone) : undefined,
+      stars: Number(u.stars) || 0,
+      comment: u.comment ? String(u.comment) : undefined,
+      created_at: String(
+        (u.raw as Record<string, unknown> | null)?.created_at ?? u.created_at ?? ""
+      ),
+    }));
+  } catch {
+    return null;
+  }
+}
+
 export async function getClinicWithDbConfig(clinicId: string) {
   const supabase = await createClient();
   const { data } = await supabase
@@ -129,6 +222,11 @@ export async function getClinicAppointments(
   options: { from?: Date; to?: Date } = {}
 ): Promise<Appointment[] | null> {
   if (!dbConfig) return null;
+
+  // Prefer the unified owner DB (aggregates every clinic, any backend). Falls
+  // back to the legacy per-type read while a clinic hasn't been imported yet.
+  const unified = await getUnifiedAppointments(dbConfig.clinic_id, options);
+  if (unified && unified.length > 0) return unified;
 
   if (dbConfig.db_type === "google_sheets") {
     const rows = await readSheetsResource(dbConfig.clinic_id, "appointments");
@@ -160,6 +258,9 @@ export async function getClinicReviews(
   dbConfig: ClinicDbConfig | null
 ): Promise<Review[] | null> {
   if (!dbConfig) return null;
+
+  const unified = await getUnifiedReviews(dbConfig.clinic_id);
+  if (unified && unified.length > 0) return unified;
 
   if (dbConfig.db_type === "google_sheets") {
     const rows = await readSheetsResource(dbConfig.clinic_id, "reviews");

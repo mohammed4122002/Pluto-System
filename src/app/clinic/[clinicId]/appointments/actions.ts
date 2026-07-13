@@ -3,10 +3,31 @@
 import { revalidatePath } from "next/cache";
 
 import { getClinicWithDbConfig } from "@/lib/clinic-data";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { createClinicSupabaseClient } from "@/lib/db-adapters/supabase";
 import { writeSheetsAppointment } from "@/lib/db-adapters/sheets";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import type { AppointmentStatus } from "@/types";
+
+// After a dashboard write lands in the clinic's own source (sheet/supabase),
+// mirror it into the owner unified DB so the dashboard (which reads unified)
+// reflects the change instantly instead of waiting for the next Sync Import.
+// Marked synced, so the Sync Export workflow won't re-push it. Best-effort.
+async function mirrorUnifiedAppointment(
+  clinicId: string,
+  appointmentId: string,
+  data: Record<string, unknown>
+) {
+  try {
+    await getAdminSupabase().rpc("dashboard_mirror_appointment", {
+      p_clinic_id: clinicId,
+      p_external_id: appointmentId,
+      p_data: data,
+    });
+  } catch {
+    // non-fatal: the next Sync Import run will reconcile
+  }
+}
 
 // Actions return a result object instead of throwing (Next.js redacts thrown
 // server-action error messages in production).
@@ -44,6 +65,7 @@ export async function updateAppointmentStatus(
         id: appointmentId,
         status,
       });
+      await mirrorUnifiedAppointment(clinicId, appointmentId, { status });
       revalidateAppointmentPaths(clinicId);
       return { ok: true };
     }
@@ -55,6 +77,7 @@ export async function updateAppointmentStatus(
       .eq("id", appointmentId);
     if (error) throw new Error(error.message);
 
+    await mirrorUnifiedAppointment(clinicId, appointmentId, { status });
     revalidateAppointmentPaths(clinicId);
     return { ok: true };
   } catch (e) {
@@ -88,6 +111,12 @@ export async function updateAppointmentDetails(
         appointment_time,
         notes,
       });
+      await mirrorUnifiedAppointment(clinicId, appointmentId, {
+        patient_name,
+        patient_phone,
+        appointment_time,
+        notes,
+      });
       revalidateAppointmentPaths(clinicId);
       return { ok: true };
     }
@@ -104,6 +133,12 @@ export async function updateAppointmentDetails(
       .eq("id", appointmentId);
     if (error) throw new Error(error.message);
 
+    await mirrorUnifiedAppointment(clinicId, appointmentId, {
+      patient_name,
+      patient_phone,
+      appointment_time,
+      notes,
+    });
     revalidateAppointmentPaths(clinicId);
     return { ok: true };
   } catch (e) {
