@@ -11,10 +11,12 @@ export async function getTelegramBotInfo(botToken: string) {
   return data.result as { id: number; username: string; first_name: string };
 }
 
-// The shared n8n Telegram webhook path. The UUID segment is baked into the
-// n8n "Telegram Webhook" workflow node and is the same for every clinic (the
-// per-clinic routing is done by the bot_token path param). Override via env if
-// the n8n workflow path ever changes.
+// The shared n8n Telegram webhook path (STATIC — no path parameter). The
+// per-clinic bot token is passed as a `?token=` query param, NOT a path
+// segment: this n8n instance only registers webhook routes with static paths,
+// so a `/telegram/:bot_token` style route silently fails to register (the bot
+// then looks "dead" — Telegram delivers, n8n 404s). Override via env if the
+// n8n workflow path ever changes.
 const TG_WEBHOOK_PATH =
   process.env.TELEGRAM_N8N_WEBHOOK_PATH ??
   "8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/telegram";
@@ -32,7 +34,7 @@ export async function registerTelegramWebhook(botToken: string) {
     throw new Error("NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL is not configured");
   }
 
-  const webhookUrl = `${base.replace(/\/$/, "")}/webhook/${TG_WEBHOOK_PATH}/${botToken}`;
+  const webhookUrl = `${base.replace(/\/$/, "")}/webhook/${TG_WEBHOOK_PATH}?token=${encodeURIComponent(botToken)}`;
 
   const res = await fetch(
     `https://api.telegram.org/bot${botToken}/setWebhook`,
