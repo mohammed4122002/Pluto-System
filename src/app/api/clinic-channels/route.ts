@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 
 import { requireOwner } from "@/lib/auth/require-owner";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { registerTelegramWebhook } from "@/lib/telegram/bot-api";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -41,5 +42,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ channels: data }, { status: 201 });
+  // Register the n8n webhook for every Telegram bot we just saved, otherwise
+  // Telegram has nowhere to deliver updates and the bot stays silent. Best
+  // effort — a registration failure must not roll back the saved channels, but
+  // we report it so the owner can retry.
+  const webhookWarnings: string[] = [];
+  for (const channel of channels) {
+    if (channel.channel === "telegram" && channel.tg_bot_token) {
+      try {
+        await registerTelegramWebhook(channel.tg_bot_token as string);
+      } catch (e) {
+        webhookWarnings.push(
+          e instanceof Error ? e.message : "فشل تسجيل webhook تيليجرام"
+        );
+      }
+    }
+  }
+
+  return NextResponse.json(
+    { channels: data, ...(webhookWarnings.length ? { webhookWarnings } : {}) },
+    { status: 201 }
+  );
 }

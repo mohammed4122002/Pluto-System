@@ -78,7 +78,7 @@ export function ClinicSidebar() {
       alive = false;
       clearInterval(t);
     };
-  }, [params.clinicId]);
+  }, [params.clinicId, role]);
 
   async function handleLogout() {
     const supabase = createClient();
