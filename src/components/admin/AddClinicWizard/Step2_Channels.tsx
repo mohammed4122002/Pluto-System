@@ -263,12 +263,24 @@ export function Step2_Channels({ data, update }: StepProps) {
                       4 خطوات لإعداد واتساب في Meta
                     </button>
                     {guideOpen ? (
-                      <ol className="list-inside list-decimal space-y-1 rounded-md bg-muted p-4 text-sm text-muted-foreground">
-                        <li>أنشئ تطبيق WhatsApp Business في Meta Developer Console</li>
-                        <li>فعّل رقم هاتف واحصل على Phone Number ID و WABA ID</li>
-                        <li>أنشئ System User وولّد Permanent Access Token</li>
-                        <li>سجّل Webhook URL أعلاه مع Verify Token في إعدادات التطبيق</li>
-                      </ol>
+                      <div className="space-y-3 rounded-md bg-muted p-4 text-sm text-muted-foreground">
+                        <ol className="list-inside list-decimal space-y-1">
+                          <li>أنشئ تطبيق WhatsApp Business في Meta Developer Console</li>
+                          <li>فعّل رقم هاتف واحصل على Phone Number ID و WABA ID</li>
+                          <li>أنشئ System User وولّد Permanent Access Token</li>
+                          <li>
+                            <span className="font-medium text-foreground">مرة واحدة فقط</span>{" "}
+                            على مستوى التطبيق: سجّل Webhook URL أعلاه مع Verify Token في
+                            Meta → WhatsApp → Configuration، واشترك في حقل{" "}
+                            <span dir="ltr">messages</span>
+                          </li>
+                        </ol>
+                        <p className="rounded-md bg-emerald-500/10 p-2 text-emerald-700 dark:text-emerald-400">
+                          ✅ ربط رقم العيادة بالتطبيق يتم <b>تلقائياً</b> عند حفظ العيادة —
+                          ما عاد تحتاج تربط كل عيادة يدوياً. تسجيل الـ Webhook (الخطوة ٤)
+                          مرة واحدة للمنصة كلها ويكفي لجميع العيادات.
+                        </p>
+                      </div>
                     ) : null}
                   </>
                 ) : channel === "telegram" ? (

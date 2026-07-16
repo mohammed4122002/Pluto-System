@@ -39,6 +39,40 @@ export async function sendWhatsAppTextMessage({
   return data;
 }
 
+export interface SubscribeWhatsAppParams {
+  wabaId: string;
+  accessToken: string;
+}
+
+/**
+ * Link a clinic's WhatsApp Business Account (WABA) to the app the access
+ * token belongs to, so Meta delivers that WABA's message webhooks to the
+ * app's configured callback URL. This is the WhatsApp equivalent of
+ * Telegram's setWebhook that we CAN automate with just the clinic's own
+ * token — the callback URL + verify token themselves are a one-time,
+ * app-level setup in the Meta dashboard (shared by every clinic on the same
+ * app), not something set per clinic. Requires the token to carry the
+ * whatsapp_business_management permission. Best-effort: throws on failure so
+ * the caller can surface it, but callers treat it as non-blocking.
+ */
+export async function subscribeWhatsAppWabaToApp({
+  wabaId,
+  accessToken,
+}: SubscribeWhatsAppParams) {
+  const res = await fetch(`${META_GRAPH_URL}/${wabaId}/subscribed_apps`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || data?.success === false) {
+    throw new Error(data?.error?.message ?? "تعذّر ربط رقم واتساب بالتطبيق");
+  }
+
+  return data;
+}
+
 export interface VerifyWhatsAppParams {
   phoneId: string;
   accessToken: string;

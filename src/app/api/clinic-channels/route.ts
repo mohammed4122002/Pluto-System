@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { requireOwner } from "@/lib/auth/require-owner";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { registerTelegramWebhook } from "@/lib/telegram/bot-api";
+import { subscribeWhatsAppWabaToApp } from "@/lib/whatsapp/meta";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -54,6 +55,27 @@ export async function POST(request: Request) {
       } catch (e) {
         webhookWarnings.push(
           e instanceof Error ? e.message : "فشل تسجيل webhook تيليجرام"
+        );
+      }
+    }
+
+    // WhatsApp: auto-link the clinic's WABA to the app so Meta delivers its
+    // message webhooks — the per-clinic step the owner would otherwise do by
+    // hand in the Meta dashboard. Needs the WABA id + a token carrying
+    // whatsapp_business_management. Non-blocking, like the Telegram case.
+    if (
+      channel.channel === "whatsapp" &&
+      channel.wa_waba_id &&
+      channel.wa_access_token
+    ) {
+      try {
+        await subscribeWhatsAppWabaToApp({
+          wabaId: channel.wa_waba_id as string,
+          accessToken: channel.wa_access_token as string,
+        });
+      } catch (e) {
+        webhookWarnings.push(
+          e instanceof Error ? e.message : "فشل ربط رقم واتساب بالتطبيق"
         );
       }
     }
