@@ -11,8 +11,21 @@ export interface AiInfoService {
   instructions: string; // per-service patient instructions
 }
 
+// One practitioner the clinic offers. When the clinic has more than the
+// owner doctor, the AI receptionist presents this roster ("here are our
+// doctors, what each does, and their times — which suits you?") and books
+// with the chosen one. When `team` is empty, the AI books with the clinic's
+// single owner doctor directly.
+export interface AiInfoDoctor {
+  name: string;
+  title: string; // specialty / role, e.g. "أخصائية جلدية وتجميل"
+  services: string; // what they provide, free text
+  schedule: string; // their working times, free text
+}
+
 export interface AiInfoForm {
   services: AiInfoService[];
+  team: AiInfoDoctor[];
   working_hours: string;
   insurance: string;
   cancel_policy: string;
@@ -21,6 +34,7 @@ export interface AiInfoForm {
 
 export const EMPTY_AI_INFO: AiInfoForm = {
   services: [{ name: "", price: "", note: "", instructions: "" }],
+  team: [],
   working_hours: "",
   insurance: "",
   cancel_policy: "",
@@ -75,6 +89,20 @@ export const SAMPLE_AI_INFO: AiInfoForm = {
       instructions: "الالتزام بالجلسات المتتابعة للحصول على أفضل نتيجة.",
     },
   ],
+  team: [
+    {
+      name: "د. سلمى العتيبي",
+      title: "أخصائية جلدية وتجميل",
+      services: "بوتوكس، فيلر، تنظيف بشرة عميق، ميزوثيرابي",
+      schedule: "السبت – الثلاثاء: 9 صباحاً – 3 عصراً",
+    },
+    {
+      name: "د. ريان الشهري",
+      title: "أخصائي ليزر وعناية بالبشرة",
+      services: "ليزر إزالة الشعر، تقشير كيميائي، علاج حب الشباب",
+      schedule: "الأحد – الخميس: 2 عصراً – 8 مساءً",
+    },
+  ],
   working_hours: "السبت – الخميس: 9 صباحاً – 5 مساءً · الجمعة: إجازة",
   insurance: "لا نتعامل مع تأمين طبي حالياً — الدفع نقداً أو تحويل.",
   cancel_policy: "الرجاء الإلغاء قبل الموعد بـ 3 ساعات على الأقل.",
@@ -93,6 +121,14 @@ export function normalizeAiInfo(raw: unknown): AiInfoForm | null {
       note: s?.note ?? "",
       instructions: s?.instructions ?? "",
     })),
+    team: Array.isArray(f.team)
+      ? f.team.map((d) => ({
+          name: d?.name ?? "",
+          title: d?.title ?? "",
+          services: d?.services ?? "",
+          schedule: d?.schedule ?? "",
+        }))
+      : [],
     working_hours: f.working_hours ?? "",
     insurance: f.insurance ?? "",
     cancel_policy: f.cancel_policy ?? "",
@@ -107,6 +143,29 @@ export function assembleAiInfo(
 ): string {
   const lines: string[] = [];
   lines.push(`عيادة ${clinicName}${doctor ? " — د. " + doctor : ""}`);
+
+  // Team / doctors. When the clinic lists a team, the AI presents these
+  // practitioners and books with the one the patient picks; otherwise it
+  // books with the single owner doctor above. The explicit "طريقة الحجز"
+  // line tells the agent which mode it is in, deterministically.
+  const team = f.team.filter((d) => d.name.trim());
+  if (team.length) {
+    lines.push("", "أطباء العيادة (اعرضهم على المريض ودعه يختار):");
+    for (const d of team) {
+      const title = d.title.trim() ? ` — ${d.title.trim()}` : "";
+      lines.push(`• ${d.name.trim()}${title}`);
+      if (d.services.trim()) lines.push(`   يقدّم: ${d.services.trim()}`);
+      if (d.schedule.trim()) lines.push(`   مواعيده: ${d.schedule.trim()}`);
+    }
+    lines.push(
+      "طريقة الحجز: العيادة فيها أكثر من طبيب — اعرض الأطباء وما يقدّمه كل واحد ومواعيده، واسأل المريض من يناسبه، ثم احجز معه."
+    );
+  } else {
+    lines.push(
+      "",
+      `طريقة الحجز: العيادة فيها الطبيب${doctor ? " د. " + doctor : ""} فقط — احجز معه مباشرة دون الحاجة لسؤال المريض عن اختيار طبيب.`
+    );
+  }
 
   const services = f.services.filter((s) => s.name.trim());
   if (services.length) {

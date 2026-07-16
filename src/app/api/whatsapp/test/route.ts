@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
-import { sendWhatsAppTextMessage } from "@/lib/whatsapp/meta";
-
-const TEST_NUMBER = process.env.WHATSAPP_TEST_NUMBER;
+import {
+  sendWhatsAppTextMessage,
+  verifyWhatsAppCredentials,
+} from "@/lib/whatsapp/meta";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -11,9 +12,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
-  const { wa_phone_id, wa_access_token } = (await request.json()) as {
+  const { wa_phone_id, wa_access_token, to } = (await request.json()) as {
     wa_phone_id: string;
     wa_access_token: string;
+    to?: string;
   };
 
   if (!wa_phone_id || !wa_access_token) {
@@ -23,21 +25,45 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!TEST_NUMBER) {
-    return NextResponse.json(
-      { error: "WHATSAPP_TEST_NUMBER is not configured" },
-      { status: 500 }
-    );
-  }
-
   try {
-    await sendWhatsAppTextMessage({
+    // Always verify the credentials against Meta first. This confirms the
+    // Phone Number ID + access token are valid without needing a recipient,
+    // a 24h session window, or an approved template.
+    const info = await verifyWhatsAppCredentials({
       phoneId: wa_phone_id,
       accessToken: wa_access_token,
-      to: TEST_NUMBER,
-      body: "رسالة اختبار من MediSync AI ✅",
     });
-    return NextResponse.json({ ok: true });
+
+    // If the owner also provided a recipient number, try a live text send as
+    // a bonus. This only succeeds inside a 24h customer-service window (or
+    // Meta test numbers); a failure here does not fail the whole test — the
+    // credentials are still valid — so we surface it as a soft note.
+    let messageSent = false;
+    let messageNote: string | undefined;
+    const recipient = (to ?? "").replace(/[^\d]/g, "");
+    if (recipient) {
+      try {
+        await sendWhatsAppTextMessage({
+          phoneId: wa_phone_id,
+          accessToken: wa_access_token,
+          to: recipient,
+          body: "رسالة اختبار من MediSync AI ✅",
+        });
+        messageSent = true;
+      } catch (err) {
+        messageNote =
+          err instanceof Error ? err.message : "تعذّر إرسال رسالة الاختبار";
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      verified_name: info.verified_name ?? null,
+      display_phone_number: info.display_phone_number ?? null,
+      quality_rating: info.quality_rating ?? null,
+      messageSent,
+      ...(messageNote ? { messageNote } : {}),
+    });
   } catch (err) {
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "Unknown error" },

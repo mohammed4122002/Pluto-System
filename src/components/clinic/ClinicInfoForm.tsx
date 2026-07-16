@@ -50,6 +50,21 @@ export function ClinicInfoForm({ clinic }: { clinic: Clinic }) {
           <Label htmlFor="phone">هاتف العيادة</Label>
           <Input id="phone" name="phone" dir="ltr" defaultValue={clinic.phone ?? ""} />
         </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="ai_persona_gender">شخصية المساعد الذكي</Label>
+          <select
+            id="ai_persona_gender"
+            name="ai_persona_gender"
+            defaultValue={clinic.ai_persona_gender ?? "female"}
+            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="female">موظفة استقبال (أنثى)</option>
+            <option value="male">موظف استقبال (ذكر)</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            يحدّد نبرة ردود البوت على المرضى — يتحدّث كموظّف أو موظّفة استقبال حسب اختيارك.
+          </p>
+        </div>
       </div>
 
       <Button type="submit" disabled={isPending}>

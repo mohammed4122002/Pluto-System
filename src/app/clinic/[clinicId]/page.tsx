@@ -51,6 +51,18 @@ export default async function ClinicTodayPage({
     to: endOfDay,
   });
 
+  // The next scheduled appointments (from now on). Shown so the landing is
+  // never blank when today happens to be empty but the clinic has data.
+  const nowDate = new Date();
+  const nowTs = nowDate.getTime();
+  const upcomingAll = await getClinicAppointments(clinic?.db_config ?? null, {
+    from: nowDate,
+  });
+  const upcoming = (upcomingAll ?? [])
+    .filter((a) => a.status === "scheduled" && new Date(a.appointment_time).getTime() > nowTs)
+    .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time))
+    .slice(0, 8);
+
   const role = platformUser?.role ?? "secretary";
   const greetingName = platformUser?.name ?? "بك";
 
@@ -102,7 +114,15 @@ export default async function ClinicTodayPage({
               className="border-none"
             />
           ) : appointments.length === 0 ? (
-            <EmptyState title="لا توجد مواعيد اليوم" className="border-none" />
+            <EmptyState
+              title="لا توجد مواعيد اليوم"
+              description={
+                upcoming.length > 0
+                  ? "لا مواعيد مجدولة لهذا اليوم — تجد مواعيدك القادمة بالأسفل."
+                  : "ابدأ بإضافة موعد جديد وستظهر مواعيد اليوم هنا."
+              }
+              className="border-none"
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -138,6 +158,43 @@ export default async function ClinicTodayPage({
           )}
         </CardContent>
       </Card>
+
+      {upcoming.length > 0 ? (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">المواعيد القادمة</CardTitle>
+            <Link
+              href={`/clinic/${clinicId}/appointments`}
+              className="text-sm text-primary hover:underline"
+            >
+              عرض الكل
+            </Link>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>الوقت</TableHead>
+                  <TableHead>المريض</TableHead>
+                  <TableHead>الهاتف</TableHead>
+                  <TableHead>التذكير</TableHead>
+                  <TableHead>الإجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {upcoming.map((appointment) => (
+                  <AppointmentRow
+                    key={appointment.id}
+                    clinicId={clinicId}
+                    appointment={appointment}
+                    readOnly={role === "doctor"}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

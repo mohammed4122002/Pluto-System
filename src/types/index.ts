@@ -85,6 +85,7 @@ export interface Clinic {
   notes?: string;
   ai_info_text?: string | null;
   ai_info_form?: unknown;
+  ai_persona_gender?: "female" | "male";
   created_at: string;
   // joined
   subscription?: Subscription;
