@@ -12,6 +12,8 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
 
   // .select() so an RLS-filtered update (0 rows) surfaces as an error instead
   // of a silent no-op success.
+  const gender = String(formData.get("ai_persona_gender") ?? "female");
+
   const { data, error } = await supabase
     .from("clinics")
     .update({
@@ -21,6 +23,7 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
       city: String(formData.get("city") ?? "").trim() || null,
       address: String(formData.get("address") ?? "").trim() || null,
       phone: String(formData.get("phone") ?? "").trim() || null,
+      ai_persona_gender: gender === "male" ? "male" : "female",
     })
     .eq("id", clinicId)
     .select("id");
