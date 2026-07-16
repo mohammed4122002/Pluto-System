@@ -22,6 +22,7 @@ export function Step2_Channels({ data, update }: StepProps) {
   const [testing, setTesting] = useState(false);
   const [testingTelegram, setTestingTelegram] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [testTo, setTestTo] = useState("");
 
   const whatsapp = data.channels.find((c) => c.channel === "whatsapp");
   const telegram = data.channels.find((c) => c.channel === "telegram");
@@ -62,11 +63,26 @@ export function Step2_Channels({ data, update }: StepProps) {
         body: JSON.stringify({
           wa_phone_id: whatsapp.wa_phone_id,
           wa_access_token: whatsapp.wa_access_token,
+          to: testTo || undefined,
         }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error ?? "فشل الاختبار");
-      toast.success("تم إرسال رسالة اختبار بنجاح");
+
+      const name = json.verified_name || json.display_phone_number || "";
+      toast.success(
+        name ? `البيانات صحيحة ✅ الرقم: ${name}` : "البيانات صحيحة ✅"
+      );
+      if (testTo) {
+        if (json.messageSent) {
+          toast.success("تم إرسال رسالة اختبار للرقم المُدخل ✅");
+        } else if (json.messageNote) {
+          toast.warning(`لم تُرسل رسالة الاختبار: ${json.messageNote}`, {
+            description:
+              "البيانات صحيحة، لكن واتساب لا يسمح برسالة نصية حرة إلا داخل 24 ساعة من مراسلة العميل أو عبر قالب معتمد.",
+          });
+        }
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "فشل الاختبار");
     } finally {
@@ -207,15 +223,34 @@ export function Step2_Channels({ data, update }: StepProps) {
                       ) : null}
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleTestConnection}
-                      disabled={testing}
-                    >
-                      {testing ? <Loader2 className="size-4 animate-spin" /> : null}
-                      اختبار الاتصال
-                    </Button>
+                    <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                      <Label className="text-xs">
+                        رقم لإرسال رسالة اختبار إليه (اختياري — بصيغة دولية مثل 9665xxxxxxxx)
+                      </Label>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Input
+                          dir="ltr"
+                          placeholder="9665xxxxxxxx"
+                          value={testTo}
+                          onChange={(e) => setTestTo(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleTestConnection}
+                          disabled={testing}
+                        >
+                          {testing ? <Loader2 className="size-4 animate-spin" /> : null}
+                          اختبار الاتصال
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        الاختبار يتحقق من صحة الـ Token و Phone ID مباشرة من Meta. إرسال
+                        رسالة فعلية يعمل فقط إذا راسلك الرقم خلال آخر 24 ساعة أو عبر قالب
+                        معتمد.
+                      </p>
+                    </div>
 
                     <button
                       type="button"
@@ -228,12 +263,24 @@ export function Step2_Channels({ data, update }: StepProps) {
                       4 خطوات لإعداد واتساب في Meta
                     </button>
                     {guideOpen ? (
-                      <ol className="list-inside list-decimal space-y-1 rounded-md bg-muted p-4 text-sm text-muted-foreground">
-                        <li>أنشئ تطبيق WhatsApp Business في Meta Developer Console</li>
-                        <li>فعّل رقم هاتف واحصل على Phone Number ID و WABA ID</li>
-                        <li>أنشئ System User وولّد Permanent Access Token</li>
-                        <li>سجّل Webhook URL أعلاه مع Verify Token في إعدادات التطبيق</li>
-                      </ol>
+                      <div className="space-y-3 rounded-md bg-muted p-4 text-sm text-muted-foreground">
+                        <ol className="list-inside list-decimal space-y-1">
+                          <li>أنشئ تطبيق WhatsApp Business في Meta Developer Console</li>
+                          <li>فعّل رقم هاتف واحصل على Phone Number ID و WABA ID</li>
+                          <li>أنشئ System User وولّد Permanent Access Token</li>
+                          <li>
+                            <span className="font-medium text-foreground">مرة واحدة فقط</span>{" "}
+                            على مستوى التطبيق: سجّل Webhook URL أعلاه مع Verify Token في
+                            Meta → WhatsApp → Configuration، واشترك في حقل{" "}
+                            <span dir="ltr">messages</span>
+                          </li>
+                        </ol>
+                        <p className="rounded-md bg-emerald-500/10 p-2 text-emerald-700 dark:text-emerald-400">
+                          ✅ ربط رقم العيادة بالتطبيق يتم <b>تلقائياً</b> عند حفظ العيادة —
+                          ما عاد تحتاج تربط كل عيادة يدوياً. تسجيل الـ Webhook (الخطوة ٤)
+                          مرة واحدة للمنصة كلها ويكفي لجميع العيادات.
+                        </p>
+                      </div>
                     ) : null}
                   </>
                 ) : channel === "telegram" ? (

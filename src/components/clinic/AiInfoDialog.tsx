@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Bot, Plus, Sparkles, Stethoscope, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
   normalizeAiInfo,
   type AiInfoForm,
   type AiInfoService,
+  type AiInfoDoctor,
 } from "@/lib/ai-info";
 
 function Field({
@@ -77,6 +78,21 @@ export function AiInfoDialog({
   }
   function removeService(i: number) {
     setForm((f) => ({ ...f, services: f.services.filter((_, idx) => idx !== i) }));
+  }
+  function setDoctor(i: number, key: keyof AiInfoDoctor, v: string) {
+    setForm((f) => ({
+      ...f,
+      team: f.team.map((d, idx) => (idx === i ? { ...d, [key]: v } : d)),
+    }));
+  }
+  function addDoctor() {
+    setForm((f) => ({
+      ...f,
+      team: [...f.team, { name: "", title: "", services: "", schedule: "" }],
+    }));
+  }
+  function removeDoctor(i: number) {
+    setForm((f) => ({ ...f, team: f.team.filter((_, idx) => idx !== i) }));
   }
 
   function handleSave() {
@@ -181,6 +197,61 @@ export function AiInfoDialog({
               <Button type="button" variant="outline" size="sm" onClick={addService}>
                 <Plus className="size-4" />
                 إضافة خدمة
+              </Button>
+            </section>
+
+            {/* Team / doctors */}
+            <section className="space-y-3 border-t border-border/60 pt-4">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="size-4 text-muted-foreground" />
+                <h4 className="text-sm font-semibold">أطباء العيادة</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                إذا كان في العيادة أكثر من طبيب، أضِفهم هنا — البوت يعرضهم على المريض
+                (كل طبيب وما يقدّمه ومواعيده) ويحجز مع الطبيب المناسب. اترك القائمة فارغة
+                إذا كان الحجز مع الطبيب الرئيسي فقط.
+              </p>
+              <div className="space-y-3">
+                {form.team.map((d, i) => (
+                  <div key={i} className="space-y-2 rounded-lg border border-border/70 p-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={d.name}
+                        onChange={(e) => setDoctor(i, "name", e.target.value)}
+                        placeholder="اسم الطبيب (مثال: د. سلمى العتيبي)"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeDoctor(i)}
+                        aria-label="حذف الطبيب"
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <Input
+                      value={d.title}
+                      onChange={(e) => setDoctor(i, "title", e.target.value)}
+                      placeholder="التخصص (مثال: أخصائية جلدية وتجميل)"
+                    />
+                    <Input
+                      value={d.services}
+                      onChange={(e) => setDoctor(i, "services", e.target.value)}
+                      placeholder="ما يقدّمه (مثال: بوتوكس، فيلر، تنظيف بشرة)"
+                    />
+                    <Input
+                      value={d.schedule}
+                      onChange={(e) => setDoctor(i, "schedule", e.target.value)}
+                      placeholder="مواعيده (مثال: السبت – الثلاثاء 9ص – 3ع)"
+                    />
+                  </div>
+                ))}
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addDoctor}>
+                <Plus className="size-4" />
+                إضافة طبيب
               </Button>
             </section>
 
