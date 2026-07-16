@@ -104,6 +104,31 @@ export function ClinicSettingsForm({
         </div>
       </div>
 
+      <div className="space-y-3 rounded-lg border border-border/60 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            name="deposit_enabled"
+            defaultChecked={automation?.deposit_enabled ?? false}
+          />
+          طلب مقدّم (deposit) لتأكيد الحجز
+        </label>
+        <div className="max-w-xs space-y-2">
+          <Label htmlFor="deposit_amount">قيمة المقدّم</Label>
+          <Input
+            id="deposit_amount"
+            name="deposit_amount"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={automation?.deposit_amount ?? 0}
+          />
+          <p className="text-xs text-muted-foreground">
+            يُطلب من المريض تحويله عبر طرق الدفع أدناه وإرسال صورة الإثبات لتأكيد الحجز.
+          </p>
+        </div>
+      </div>
+
       <Button type="submit" disabled={isPending}>
         {isPending ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
       </Button>
