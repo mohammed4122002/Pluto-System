@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+
+import { requireClinicMember } from "@/lib/auth/require-clinic-access";
+import { getAdminSupabase } from "@/lib/supabase/admin";
+
+type RouteContext = { params: Promise<{ clinicId: string; apptId: string }> };
+
+const DECISIONS = ["paid", "rejected", "pending"] as const;
+
+// Staff confirms or rejects a booking's deposit payment. Updates the payment
+// state on the unified appointment (the dashboard's read path); this column
+// is untouched by the sheet sync, so the decision sticks.
+export async function PATCH(request: Request, { params }: RouteContext) {
+  const { clinicId, apptId } = await params;
+  const auth = await requireClinicMember(clinicId);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.message }, { status: auth.status });
+  }
+  const body = await request.json();
+  const status = String(body.status ?? "");
+  if (!DECISIONS.includes(status as (typeof DECISIONS)[number])) {
+    return NextResponse.json({ error: "قرار غير صالح" }, { status: 400 });
+  }
+
+  const { data, error } = await getAdminSupabase()
+    .from("unified_appointments")
+    .update({ payment_status: status, payment_updated_at: new Date().toISOString() })
+    .eq("id", apptId)
+    .eq("clinic_id", clinicId)
+    .select("id, payment_status")
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ appointment: data });
+}

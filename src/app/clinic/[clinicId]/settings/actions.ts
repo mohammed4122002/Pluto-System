@@ -76,6 +76,8 @@ export async function updateAutomation(clinicId: string, formData: FormData) {
       rating_message_ar: String(formData.get("rating_message_ar") ?? ""),
       working_hours_start: String(formData.get("working_hours_start") ?? "08:00"),
       working_hours_end: String(formData.get("working_hours_end") ?? "20:00"),
+      deposit_enabled: formData.get("deposit_enabled") === "on",
+      deposit_amount: Number(formData.get("deposit_amount") ?? 0) || 0,
     })
     .eq("clinic_id", clinicId)
     .select("id");

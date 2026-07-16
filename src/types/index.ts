@@ -94,6 +94,31 @@ export interface Clinic {
   automation?: ClinicAutomation;
 }
 
+export type PaymentMethodType =
+  | "vodafone_cash"
+  | "instapay"
+  | "visa"
+  | "bank"
+  | "cash"
+  | "other";
+
+export interface ClinicPaymentMethod {
+  id: string;
+  clinic_id: string;
+  name_ar: string;
+  name_en?: string | null;
+  type: PaymentMethodType;
+  account_ref?: string | null;
+  instructions?: string | null;
+  is_enabled: boolean;
+  show_in_bot: boolean;
+  is_default: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export type PaymentStatus = "none" | "pending" | "paid" | "rejected" | "refunded";
+
 export interface ClinicChannel {
   id: string;
   clinic_id: string;
@@ -155,6 +180,8 @@ export interface ClinicAutomation {
   rating_message_ar?: string;
   working_hours_start?: string;
   working_hours_end?: string;
+  deposit_enabled?: boolean;
+  deposit_amount?: number;
 }
 
 export interface Subscription {

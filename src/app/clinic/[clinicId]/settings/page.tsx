@@ -7,8 +7,9 @@ import { ClinicSettingsForm } from "@/components/clinic/ClinicSettingsForm";
 import { ClinicInfoForm } from "@/components/clinic/ClinicInfoForm";
 import { AiInfoDialog } from "@/components/clinic/AiInfoDialog";
 import { ClinicStaffManager } from "@/components/admin/ClinicStaffManager";
+import { PaymentMethodsManager } from "@/components/clinic/PaymentMethodsManager";
 import type { AiInfoForm } from "@/lib/ai-info";
-import type { Clinic, ClinicAutomation } from "@/types";
+import type { Clinic, ClinicAutomation, ClinicPaymentMethod } from "@/types";
 
 export default async function ClinicSettingsPage({
   params,
@@ -19,18 +20,25 @@ export default async function ClinicSettingsPage({
   await requireClinicRole(clinicId, ["manager"]);
   const supabase = await createClient();
 
-  const [{ data: clinic }, { data: automation }, { data: staff }] = await Promise.all([
-    supabase.from("clinics").select("*").eq("id", clinicId).single(),
-    supabase.from("clinic_automation").select("*").eq("clinic_id", clinicId).single(),
-    // Staff listing needs the admin client: platform_users RLS only exposes
-    // the caller's own row to non-owners. The manager role check above gates
-    // access to this page.
-    getAdminSupabase()
-      .from("platform_users")
-      .select("id, name, email, role, is_active, created_at")
-      .eq("clinic_id", clinicId)
-      .order("created_at", { ascending: true }),
-  ]);
+  const [{ data: clinic }, { data: automation }, { data: staff }, { data: paymentMethods }] =
+    await Promise.all([
+      supabase.from("clinics").select("*").eq("id", clinicId).single(),
+      supabase.from("clinic_automation").select("*").eq("clinic_id", clinicId).single(),
+      // Staff listing needs the admin client: platform_users RLS only exposes
+      // the caller's own row to non-owners. The manager role check above gates
+      // access to this page.
+      getAdminSupabase()
+        .from("platform_users")
+        .select("id, name, email, role, is_active, created_at")
+        .eq("clinic_id", clinicId)
+        .order("created_at", { ascending: true }),
+      getAdminSupabase()
+        .from("clinic_payment_methods")
+        .select("*")
+        .eq("clinic_id", clinicId)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -63,6 +71,18 @@ export default async function ClinicSettingsPage({
           <ClinicSettingsForm
             clinicId={clinicId}
             automation={automation as ClinicAutomation | null}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">طرق الدفع</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PaymentMethodsManager
+            clinicId={clinicId}
+            initialMethods={(paymentMethods ?? []) as ClinicPaymentMethod[]}
           />
         </CardContent>
       </Card>
