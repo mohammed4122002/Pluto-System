@@ -99,12 +99,18 @@ export interface ClinicChannel {
   clinic_id: string;
   channel: Channel;
   is_enabled: boolean;
+  // WhatsApp provider: 'meta' (Cloud API, default) or 'twilio'.
+  wa_provider?: "meta" | "twilio";
   wa_phone_number?: string;
   wa_phone_id?: string;
   wa_waba_id?: string;
   wa_access_token?: string;
   wa_verify_token?: string;
   wa_webhook_url?: string;
+  // Twilio (when wa_provider = 'twilio')
+  twilio_account_sid?: string;
+  twilio_auth_token?: string;
+  twilio_whatsapp_from?: string;
   tg_bot_token?: string;
   tg_chat_id?: string;
   fb_page_id?: string;

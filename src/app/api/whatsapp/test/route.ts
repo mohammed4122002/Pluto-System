@@ -5,6 +5,10 @@ import {
   sendWhatsAppTextMessage,
   verifyWhatsAppCredentials,
 } from "@/lib/whatsapp/meta";
+import {
+  sendTwilioWhatsAppMessage,
+  verifyTwilioCredentials,
+} from "@/lib/whatsapp/twilio";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -12,40 +16,84 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
 
-  const { wa_phone_id, wa_access_token, to } = (await request.json()) as {
-    wa_phone_id: string;
-    wa_access_token: string;
+  const body = (await request.json()) as {
+    provider?: "meta" | "twilio";
+    // Meta
+    wa_phone_id?: string;
+    wa_access_token?: string;
+    // Twilio
+    twilio_account_sid?: string;
+    twilio_auth_token?: string;
+    twilio_whatsapp_from?: string;
+    // Optional live-message recipient
     to?: string;
   };
 
-  if (!wa_phone_id || !wa_access_token) {
-    return NextResponse.json(
-      { error: "wa_phone_id and wa_access_token are required" },
-      { status: 400 }
-    );
-  }
+  const provider = body.provider === "twilio" ? "twilio" : "meta";
+  const recipient = (body.to ?? "").replace(/[^\d+]/g, "");
 
   try {
-    // Always verify the credentials against Meta first. This confirms the
-    // Phone Number ID + access token are valid without needing a recipient,
-    // a 24h session window, or an approved template.
+    if (provider === "twilio") {
+      if (!body.twilio_account_sid || !body.twilio_auth_token) {
+        return NextResponse.json(
+          { error: "Twilio Account SID و Auth Token مطلوبان" },
+          { status: 400 }
+        );
+      }
+
+      const info = await verifyTwilioCredentials({
+        accountSid: body.twilio_account_sid,
+        authToken: body.twilio_auth_token,
+      });
+
+      let messageSent = false;
+      let messageNote: string | undefined;
+      if (recipient && body.twilio_whatsapp_from) {
+        try {
+          await sendTwilioWhatsAppMessage({
+            accountSid: body.twilio_account_sid,
+            authToken: body.twilio_auth_token,
+            from: body.twilio_whatsapp_from,
+            to: recipient,
+            body: "رسالة اختبار من MediSync AI ✅",
+          });
+          messageSent = true;
+        } catch (err) {
+          messageNote =
+            err instanceof Error ? err.message : "تعذّر إرسال رسالة الاختبار";
+        }
+      }
+
+      return NextResponse.json({
+        ok: true,
+        provider,
+        verified_name: info.friendly_name ?? null,
+        account_status: info.status ?? null,
+        messageSent,
+        ...(messageNote ? { messageNote } : {}),
+      });
+    }
+
+    // provider === "meta"
+    if (!body.wa_phone_id || !body.wa_access_token) {
+      return NextResponse.json(
+        { error: "wa_phone_id and wa_access_token are required" },
+        { status: 400 }
+      );
+    }
+
     const info = await verifyWhatsAppCredentials({
-      phoneId: wa_phone_id,
-      accessToken: wa_access_token,
+      phoneId: body.wa_phone_id,
+      accessToken: body.wa_access_token,
     });
 
-    // If the owner also provided a recipient number, try a live text send as
-    // a bonus. This only succeeds inside a 24h customer-service window (or
-    // Meta test numbers); a failure here does not fail the whole test — the
-    // credentials are still valid — so we surface it as a soft note.
     let messageSent = false;
     let messageNote: string | undefined;
-    const recipient = (to ?? "").replace(/[^\d]/g, "");
     if (recipient) {
       try {
         await sendWhatsAppTextMessage({
-          phoneId: wa_phone_id,
-          accessToken: wa_access_token,
+          phoneId: body.wa_phone_id,
+          accessToken: body.wa_access_token,
           to: recipient,
           body: "رسالة اختبار من MediSync AI ✅",
         });
@@ -58,6 +106,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
+      provider,
       verified_name: info.verified_name ?? null,
       display_phone_number: info.display_phone_number ?? null,
       quality_rating: info.quality_rating ?? null,

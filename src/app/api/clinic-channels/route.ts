@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     // whatsapp_business_management. Non-blocking, like the Telegram case.
     if (
       channel.channel === "whatsapp" &&
+      channel.wa_provider !== "twilio" &&
       channel.wa_waba_id &&
       channel.wa_access_token
     ) {
