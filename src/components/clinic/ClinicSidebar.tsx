@@ -13,6 +13,7 @@ import {
   LogOut,
   MessageCircle,
   MessagesSquare,
+  Bot,
   Users,
   Stethoscope,
   UserCog,
@@ -36,6 +37,7 @@ const NAV_ITEMS: { href: string; label: string; icon: typeof CalendarClock; role
   { href: "/reminders", label: "التذكيرات", icon: BellRing, roles: ["owner", "manager", "secretary"] },
   { href: "/ratings", label: "التقييمات", icon: Star, roles: ["owner", "manager", "doctor"] },
   { href: "/reports", label: "التقارير", icon: BarChart3, roles: ["owner", "manager"] },
+  { href: "/bot-status", label: "حالة البوت", icon: Bot, roles: ["manager"] },
   { href: "/settings", label: "الإعدادات", icon: Settings, roles: ["owner", "manager"] },
 ];
 
