@@ -83,8 +83,26 @@ export function PaymentReviewList({
             key={r.id}
             className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-4 py-3"
           >
-            <div className="min-w-0">
-              <p className="text-sm font-medium">{r.patient_name || "—"}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              {r.payment_proof_url ? (
+                <a
+                  href={r.payment_proof_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0"
+                  title="عرض إثبات الدفع بالحجم الكامل"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={r.payment_proof_url}
+                    alt="إثبات الدفع"
+                    loading="lazy"
+                    className="size-14 rounded-md border border-border object-cover"
+                  />
+                </a>
+              ) : null}
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{r.patient_name || "—"}</p>
               <p className="text-xs text-muted-foreground">
                 <span dir="ltr">{fmt(r.appointment_time)}</span>
                 {r.deposit_amount ? (
@@ -94,6 +112,7 @@ export function PaymentReviewList({
                 ) : null}
                 {r.payment_method ? ` · ${r.payment_method}` : ""}
               </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {r.payment_proof_url ? (
