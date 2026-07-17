@@ -4,7 +4,7 @@ import { requireClinicManagerOrOwner } from "@/lib/auth/require-clinic-access";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { verifyWhatsAppCredentials } from "@/lib/whatsapp/meta";
 import { verifyTwilioCredentials } from "@/lib/whatsapp/twilio";
-import { getTelegramBotInfo } from "@/lib/telegram/bot-api";
+import { getTelegramBotInfo, getTelegramWebhookInfo } from "@/lib/telegram/bot-api";
 
 type RouteContext = { params: Promise<{ clinicId: string }> };
 
@@ -37,6 +37,12 @@ export async function POST(_request: Request, { params }: RouteContext) {
     ok: boolean;
     label?: string;
     error?: string;
+    webhook?: {
+      registered: boolean;
+      matches: boolean;
+      pendingUpdates: number;
+      lastError: string | null;
+    };
   }[] = [];
 
   for (const ch of channels ?? []) {
@@ -44,7 +50,30 @@ export async function POST(_request: Request, { params }: RouteContext) {
       if (!ch.tg_bot_token) continue;
       try {
         const bot = await getTelegramBotInfo(ch.tg_bot_token);
-        results.push({ channel: "telegram", ok: true, label: `@${bot.username}` });
+        // Token is valid — but the bot is only actually alive if Telegram has
+        // our n8n webhook on file. Surface that so a valid-token-but-silent bot
+        // (the classic new-clinic symptom) is visible and fixable.
+        let webhook;
+        try {
+          const wh = await getTelegramWebhookInfo(ch.tg_bot_token);
+          webhook = {
+            registered: wh.registered,
+            matches: wh.matches,
+            pendingUpdates: wh.pendingUpdates,
+            lastError: wh.lastError,
+          };
+        } catch {
+          webhook = undefined;
+        }
+        results.push({
+          channel: "telegram",
+          ok: Boolean(webhook?.matches),
+          label: `@${bot.username}`,
+          error: webhook?.matches
+            ? undefined
+            : "التوكن سليم لكن البوت غير مربوط باستقبال الرسائل — اضغط «إعادة ربط البوت»",
+          webhook,
+        });
       } catch (e) {
         results.push({ channel: "telegram", ok: false, error: msg(e) });
       }
