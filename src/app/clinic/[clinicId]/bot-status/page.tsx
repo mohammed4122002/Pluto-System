@@ -1,11 +1,13 @@
 import { MessagesSquare, AlertTriangle, CalendarClock, Radio } from "lucide-react";
 
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { ChannelHealthPanel } from "@/components/clinic/ChannelHealthPanel";
+import { StaffNotifyCard } from "@/components/clinic/StaffNotifyCard";
 
 export default async function BotStatusPage({
   params,
@@ -15,6 +17,16 @@ export default async function BotStatusPage({
   const { clinicId } = await params;
   await requireClinicRole(clinicId, ["manager"]);
   const admin = getAdminSupabase();
+
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  const { data: me } = await admin
+    .from("platform_users")
+    .select("id, notify_chat_id")
+    .eq("auth_id", user?.id ?? "")
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
 
   const nowIso = new Date().toISOString();
   const [channelsRes, convRes, attnRes, apptRes] = await Promise.all([
@@ -74,6 +86,14 @@ export default async function BotStatusPage({
           <ChannelHealthPanel clinicId={clinicId} />
         </CardContent>
       </Card>
+
+      {me?.id ? (
+        <StaffNotifyCard
+          clinicId={clinicId}
+          code={`ربط-${me.id}`}
+          linked={Boolean(me.notify_chat_id)}
+        />
+      ) : null}
 
       <Card>
         <CardHeader>

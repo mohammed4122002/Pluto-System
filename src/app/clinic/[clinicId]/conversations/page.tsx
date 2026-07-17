@@ -47,7 +47,11 @@ export default async function ConversationsPage({
         description="محادثات المرضى عبر واتساب وتيليجرام — تابع ردود المساعد الذكي أو تدخّل بنفسك في أي وقت"
       />
       {me?.id ? (
-        <StaffNotifyCard code={`ربط-${me.id}`} linked={Boolean(me.notify_chat_id)} />
+        <StaffNotifyCard
+          clinicId={clinicId}
+          code={`ربط-${me.id}`}
+          linked={Boolean(me.notify_chat_id)}
+        />
       ) : null}
       <ConversationsInbox clinicId={clinicId} initial={(data ?? []) as Conversation[]} />
     </div>
