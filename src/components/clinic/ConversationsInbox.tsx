@@ -10,7 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Conversation, ConversationMessage } from "@/types";
 
-const CHANNEL_LABEL: Record<string, string> = { telegram: "تيليجرام", whatsapp: "واتساب" };
+const CHANNEL_LABEL: Record<string, string> = {
+  telegram: "تيليجرام",
+  whatsapp: "واتساب",
+  instagram: "إنستغرام",
+  messenger: "ماسنجر",
+};
+
+const CHANNEL_STYLE: Record<string, string> = {
+  telegram: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  whatsapp: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  instagram: "bg-pink-500/15 text-pink-600 dark:text-pink-400",
+  messenger: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+};
 
 function timeAr(iso: string) {
   return new Intl.DateTimeFormat("ar-SA", {
@@ -194,7 +206,7 @@ export function ConversationsInbox({
                   {c.last_message_preview ?? ""}
                 </p>
                 <div className="flex items-center gap-1.5">
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge className={cn("text-[10px]", CHANNEL_STYLE[c.channel] ?? "bg-secondary text-secondary-foreground")}>
                     {CHANNEL_LABEL[c.channel] ?? c.channel}
                   </Badge>
                   {c.mode === "human" ? (
