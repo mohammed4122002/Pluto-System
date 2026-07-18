@@ -38,6 +38,8 @@ export interface EmployeeView {
   name: string;
   email: string;
   role: string;
+  title: string | null;
+  phone: string | null;
   work_start: string | null;
   work_end: string | null;
   working_days: number[];
@@ -100,11 +102,18 @@ export function EmployeesManager({
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold">{e.name}</p>
-                <p className="text-xs text-muted-foreground" dir="ltr">
-                  {e.email}
-                </p>
+                {e.email ? (
+                  <p className="text-xs text-muted-foreground" dir="ltr">
+                    {e.email}
+                  </p>
+                ) : null}
+                {e.phone ? (
+                  <p className="text-xs text-muted-foreground" dir="ltr">
+                    {e.phone}
+                  </p>
+                ) : null}
               </div>
-              <Badge variant="secondary">{ROLE_AR[e.role] ?? e.role}</Badge>
+              <Badge variant="secondary">{e.title || ROLE_AR[e.role] || e.role}</Badge>
             </div>
 
             {/* Stats */}

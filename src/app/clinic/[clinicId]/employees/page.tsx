@@ -20,7 +20,7 @@ export default async function EmployeesPage({
     admin.from("clinic_db_config").select("*").eq("clinic_id", clinicId).single(),
     admin
       .from("platform_users")
-      .select("id, name, email, role, work_start, work_end, working_days")
+      .select("id, name, email, role, title, phone, work_start, work_end, working_days")
       .eq("clinic_id", clinicId)
       .order("created_at", { ascending: true }),
   ]);
@@ -58,6 +58,8 @@ export default async function EmployeesPage({
       name: (s.name as string) || (s.email as string) || "—",
       email: (s.email as string) ?? "",
       role: s.role as string,
+      title: (s.title as string | null) ?? null,
+      phone: (s.phone as string | null) ?? null,
       work_start: (s.work_start as string | null) ?? null,
       work_end: (s.work_end as string | null) ?? null,
       working_days: (s.working_days as number[] | null) ?? [],
