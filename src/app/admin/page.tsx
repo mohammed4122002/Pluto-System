@@ -335,6 +335,7 @@ export default async function AdminOverviewPage() {
                         {new Intl.DateTimeFormat("ar-SA", {
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone: "Asia/Riyadh",
                         }).format(new Date(row.executed_at))}
                       </TableCell>
                     </TableRow>

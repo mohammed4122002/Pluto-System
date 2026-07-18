@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireClinicRole } from "@/lib/auth/require-clinic-role";
+import { formatDateTimeAr } from "@/lib/format";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,10 +62,7 @@ export default async function RemindersLogPage({
                     </TableCell>
                     <TableCell className="max-w-md truncate">{log.error_msg ?? "—"}</TableCell>
                     <TableCell dir="ltr" className="text-end">
-                      {new Intl.DateTimeFormat("ar-SA", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      }).format(new Date(log.executed_at))}
+                      {formatDateTimeAr(log.executed_at)}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,6 +1,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ReminderStatusBadge, type ReminderStatus } from "@/components/clinic/ReminderStatusBadge";
 import { AppointmentActionsMenu } from "@/components/clinic/AppointmentActionsMenu";
+import { formatTimeAr } from "@/lib/format";
 import type { Appointment } from "@/types";
 
 function reminderStatusOf(appointment: Appointment): ReminderStatus {
@@ -22,9 +23,7 @@ export function AppointmentRow({
   /** Hide the edit/status actions menu — used for the doctor's read-only view. */
   readOnly?: boolean;
 }) {
-  const time = new Intl.DateTimeFormat("ar-SA", { timeStyle: "short" }).format(
-    new Date(appointment.appointment_time)
-  );
+  const time = formatTimeAr(appointment.appointment_time);
 
   return (
     <TableRow>
@@ -40,9 +39,7 @@ export function AppointmentRow({
           status={reminderStatusOf(appointment)}
           detail={
             appointment.reminder_sent_at
-              ? new Intl.DateTimeFormat("ar-SA", { timeStyle: "short" }).format(
-                  new Date(appointment.reminder_sent_at)
-                )
+              ? formatTimeAr(appointment.reminder_sent_at)
               : appointment.patient_phone
                 ? undefined
                 : "رقم خاطئ"

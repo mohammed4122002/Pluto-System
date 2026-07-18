@@ -243,6 +243,7 @@ async function EmployeeSelfPanel({
         month: "short",
         hour: "numeric",
         minute: "2-digit",
+        timeZone: "Asia/Riyadh",
       }).format(new Date(iso));
     } catch {
       return iso;
