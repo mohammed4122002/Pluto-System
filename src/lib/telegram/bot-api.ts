@@ -21,17 +21,24 @@ const TG_WEBHOOK_PATH =
   process.env.TELEGRAM_N8N_WEBHOOK_PATH ??
   "8f4b2c1e-6a9d-4f3b-b2a7-1c5e9d0a3f76/telegram";
 
+// Base URL of the n8n instance that hosts the shared Telegram webhook. It has a
+// hardcoded default (the current self-hosted n8n) so that registering a new
+// clinic's bot works out of the box even when the env var is not set — the
+// exact failure that left brand-new clinics' bots silent: registration threw
+// on a missing env var, the error was swallowed as a best-effort warning, and
+// Telegram was never told where to deliver updates. Override via env when the
+// n8n instance moves.
+const N8N_WEBHOOK_BASE_URL =
+  process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL ??
+  "https://n8n-quc4.srv1825882.hstgr.cloud";
+
 /**
  * The exact URL a clinic's Telegram bot must be pointed at so Telegram delivers
  * updates to the shared n8n webhook. Single source of truth for both
  * registering the webhook and checking whether it is already registered.
  */
 export function telegramWebhookUrl(botToken: string) {
-  const base = process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL;
-  if (!base) {
-    throw new Error("NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL is not configured");
-  }
-  return `${base.replace(/\/$/, "")}/webhook/${TG_WEBHOOK_PATH}?token=${encodeURIComponent(botToken)}`;
+  return `${N8N_WEBHOOK_BASE_URL.replace(/\/$/, "")}/webhook/${TG_WEBHOOK_PATH}?token=${encodeURIComponent(botToken)}`;
 }
 
 /**

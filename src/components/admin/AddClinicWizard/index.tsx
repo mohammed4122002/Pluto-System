@@ -63,7 +63,7 @@ export function AddClinicWizard() {
       if (!clinicRes.ok) throw new Error(clinicJson.error ?? "فشل إنشاء العيادة");
       const clinicId = clinicJson.clinic.id as string;
 
-      await Promise.all([
+      const [channelsRes] = await Promise.all([
         fetch("/api/clinic-channels", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -90,6 +90,17 @@ export function AddClinicWizard() {
           }),
         }),
       ]);
+
+      // Surface a failed Telegram auto-registration so the owner knows the bot
+      // won't respond until they reconnect it — otherwise a saved-but-silent
+      // bot looks like success. The reconnect button lives in "حالة البوت".
+      const channelsJson = await channelsRes.json().catch(() => null);
+      if (channelsJson?.webhookWarnings?.length) {
+        toast.warning(
+          "تم إنشاء العيادة، لكن تعذّر ربط بوت تيليجرام تلقائياً. افتح «حالة البوت» ← «فحص القنوات» ← «إعادة ربط البوت».",
+          { duration: 10000 }
+        );
+      }
 
       setLaunched({ clinicId });
     } catch (err) {
