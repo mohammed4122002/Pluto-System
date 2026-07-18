@@ -40,6 +40,7 @@ export default async function AdminSettingsPage() {
                 ? new Intl.DateTimeFormat("ar-SA", {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: "Asia/Riyadh",
                   }).format(new Date(user.last_sign_in_at))
                 : "—"}
             </span>

@@ -27,6 +27,7 @@ export function N8nStatusCard({
             ? new Intl.DateTimeFormat("ar-SA", {
                 dateStyle: "medium",
                 timeStyle: "short",
+                timeZone: "Asia/Riyadh",
               }).format(new Date(lastExecutedAt))
             : "—"}
         </p>

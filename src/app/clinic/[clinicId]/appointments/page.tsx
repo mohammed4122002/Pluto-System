@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AppointmentRow } from "@/components/clinic/AppointmentRow";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { formatDateTimeAr } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -35,10 +36,7 @@ export default async function ClinicAppointmentsPage({
   const appointments = await getClinicAppointments(clinic?.db_config ?? null);
 
   const exportRows = (appointments ?? []).map((a) => ({
-    time: new Intl.DateTimeFormat("ar-SA", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(a.appointment_time)),
+    time: formatDateTimeAr(a.appointment_time),
     patient: a.patient_name ?? "",
     phone: a.patient_phone ?? "",
     status: STATUS_AR[a.status] ?? a.status,

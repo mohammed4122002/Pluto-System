@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,77 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { updateAutomation } from "@/app/clinic/[clinicId]/settings/actions";
 import type { ClinicAutomation } from "@/types";
+
+// The exact tokens the reminder/rating cron workflows substitute (n8n
+// .replaceAll calls) — must match those literally or a chip would insert a
+// placeholder that never gets filled in.
+const REMINDER_VARS = [
+  { token: "{اسم_المريض}", label: "اسم المريض" },
+  { token: "{اسم_الطبيب}", label: "اسم الطبيب" },
+  { token: "{وقت_الموعد}", label: "وقت الموعد" },
+  { token: "{الوقت_المتبقي}", label: "الوقت المتبقي" },
+  { token: "{عنوان_العيادة}", label: "عنوان العيادة" },
+];
+const RATING_VARS = [
+  { token: "{اسم_المريض}", label: "اسم المريض" },
+  { token: "{اسم_الطبيب}", label: "اسم الطبيب" },
+];
+
+function TemplateTextarea({
+  id,
+  name,
+  defaultValue,
+  variables,
+}: {
+  id: string;
+  name: string;
+  defaultValue: string;
+  variables: { token: string; label: string }[];
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const [value, setValue] = useState(defaultValue);
+
+  function insertVar(token: string) {
+    const el = ref.current;
+    if (!el) return;
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? value.length;
+    const next = value.slice(0, start) + token + value.slice(end);
+    setValue(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange(pos, pos);
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {variables.map((v) => (
+          <button
+            key={v.token}
+            type="button"
+            onClick={() => insertVar(v.token)}
+            className="rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs text-primary transition-colors hover:bg-primary/10"
+            title={v.token}
+          >
+            + {v.label}
+          </button>
+        ))}
+      </div>
+      <textarea
+        ref={ref}
+        id={id}
+        name={name}
+        rows={3}
+        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
+    </div>
+  );
+}
 
 export function ClinicSettingsForm({
   clinicId,
@@ -54,23 +125,27 @@ export function ClinicSettingsForm({
 
       <div className="space-y-2">
         <Label htmlFor="reminder_message_ar">نص رسالة التذكير</Label>
-        <textarea
+        <p className="text-xs text-muted-foreground">
+          اضغط على أي متغيّر لإدراجه في مكان المؤشر — يستبدله النظام تلقائياً بالقيمة الفعلية عند الإرسال.
+        </p>
+        <TemplateTextarea
           id="reminder_message_ar"
           name="reminder_message_ar"
-          rows={3}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           defaultValue={automation?.reminder_message_ar ?? ""}
+          variables={REMINDER_VARS}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="rating_message_ar">نص رسالة طلب التقييم</Label>
-        <textarea
+        <p className="text-xs text-muted-foreground">
+          اضغط على أي متغيّر لإدراجه في مكان المؤشر — يستبدله النظام تلقائياً بالقيمة الفعلية عند الإرسال.
+        </p>
+        <TemplateTextarea
           id="rating_message_ar"
           name="rating_message_ar"
-          rows={3}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           defaultValue={automation?.rating_message_ar ?? ""}
+          variables={RATING_VARS}
         />
       </div>
 

@@ -47,7 +47,7 @@ export default async function ClinicSettingsPage({
     getAdminSupabase()
       .from("clinic_channels")
       .select(
-        "channel, is_enabled, tg_bot_token, wa_provider, wa_phone_number, wa_phone_id, wa_waba_id, wa_access_token, twilio_account_sid, twilio_auth_token, twilio_whatsapp_from"
+        "channel, is_enabled, tg_bot_token, wa_provider, wa_phone_number, wa_phone_id, wa_waba_id, wa_access_token, wa_verify_token, twilio_account_sid, twilio_auth_token, twilio_whatsapp_from"
       )
       .eq("clinic_id", clinicId),
   ]);
@@ -65,6 +65,7 @@ export default async function ClinicSettingsPage({
     wa_phone_number: c.wa_phone_number,
     wa_phone_id: c.wa_phone_id,
     wa_waba_id: c.wa_waba_id,
+    wa_verify_token: c.wa_verify_token,
     twilio_account_sid: c.twilio_account_sid,
     twilio_whatsapp_from: c.twilio_whatsapp_from,
   }));

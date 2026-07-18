@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,34 @@ export interface ChannelSummary {
   wa_phone_number?: string | null;
   wa_phone_id?: string | null;
   wa_waba_id?: string | null;
+  wa_verify_token?: string | null;
   twilio_account_sid?: string | null;
   twilio_whatsapp_from?: string | null;
+}
+
+const N8N_BASE =
+  process.env.NEXT_PUBLIC_N8N_WEBHOOK_BASE_URL ?? "https://n8n-quc4.srv1825882.hstgr.cloud";
+// Static, shared across every clinic — the n8n workflow matches the clinic by
+// the Twilio "To" number, not by a per-clinic path.
+const TWILIO_WEBHOOK_URL = `${N8N_BASE}/webhook/d9e8f7a6-twilio-whatsapp`;
+
+function CopyField({ value }: { value: string }) {
+  return (
+    <div className="flex gap-2">
+      <Input dir="ltr" readOnly value={value} className="text-xs" />
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={() => {
+          navigator.clipboard.writeText(value);
+          toast.success("تم النسخ");
+        }}
+      >
+        <Copy className="size-4" />
+      </Button>
+    </div>
+  );
 }
 
 export function ChannelsEditor({
@@ -235,6 +261,14 @@ function WhatsAppSection({
               onChange={(e) => setTwilioFrom(e.target.value)}
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>رابط الاستقبال (Inbound Webhook URL)</Label>
+            <CopyField value={TWILIO_WEBHOOK_URL} />
+            <p className="text-xs text-muted-foreground">
+              في Twilio Console → WhatsApp Sandbox/Sender → خانة «When a message comes in» (POST)،
+              الصق هذا الرابط. نفس الرابط لكل العيادات — لا يحتاج تفعيلاً منفصلاً بعد الحفظ.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -264,6 +298,26 @@ function WhatsAppSection({
               onChange={(e) => setWaAccessToken(e.target.value)}
             />
           </div>
+          {current?.wa_verify_token ? (
+            <>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Webhook URL (مرة واحدة لكل التطبيق في Meta)</Label>
+                <CopyField value={`${N8N_BASE}/webhook/${current.wa_verify_token}/whatsapp`} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Verify Token</Label>
+                <CopyField value={current.wa_verify_token} />
+              </div>
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                سجّل هذين مرة واحدة في Meta → WhatsApp → Configuration، واشترك في حقل{" "}
+                <span dir="ltr">messages</span>.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              رابط الـwebhook وVerify Token يظهران بعد أول حفظ.
+            </p>
+          )}
         </div>
       )}
 
