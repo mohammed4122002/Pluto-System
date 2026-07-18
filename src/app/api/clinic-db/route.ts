@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { triggerEmployeeSync } from "@/lib/n8n/webhooks";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -30,6 +31,14 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Best-effort: a Sheets clinic's employees would otherwise sit empty on
+  // the dashboard and in the AI bot until the next 15-minute cron run.
+  // Awaited (not fire-and-forget) — a serverless function can be frozen
+  // before an un-awaited request completes once the response is sent.
+  if (dbConfig.db_type === "google_sheets" && dbConfig.gs_spreadsheet_id) {
+    await triggerEmployeeSync();
   }
 
   return NextResponse.json({ db_config: data }, { status: 201 });
