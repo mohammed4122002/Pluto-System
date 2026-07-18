@@ -5,10 +5,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClinicSettingsForm } from "@/components/clinic/ClinicSettingsForm";
 import { ClinicInfoForm } from "@/components/clinic/ClinicInfoForm";
-import { AiInfoDialog } from "@/components/clinic/AiInfoDialog";
 import { ClinicStaffManager } from "@/components/admin/ClinicStaffManager";
 import { PaymentMethodsManager } from "@/components/clinic/PaymentMethodsManager";
-import type { AiInfoForm } from "@/lib/ai-info";
 import type { Clinic, ClinicAutomation, ClinicPaymentMethod } from "@/types";
 
 export default async function ClinicSettingsPage({
@@ -44,22 +42,19 @@ export default async function ClinicSettingsPage({
     <div className="space-y-6">
       <PageHeader
         title="إعدادات العيادة"
-        description="معلومات العيادة، المساعد الذكي، أوقات العمل، والموظفون — كل التحكم من مكان واحد"
+        description="معلومات العيادة، أوقات العمل، طرق الدفع، والموظفون — كل التحكم من مكان واحد"
       />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">معلومات العيادة والمساعد الذكي</CardTitle>
+          <CardTitle className="text-base">معلومات العيادة</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {clinic ? <ClinicInfoForm clinic={clinic as Clinic} /> : null}
-          {clinic ? (
-            <AiInfoDialog
-              clinicId={clinicId}
-              initialForm={(clinic as Clinic).ai_info_form as AiInfoForm | null}
-              hasContent={Boolean((clinic as Clinic).ai_info_text)}
-            />
-          ) : null}
+          <p className="text-xs text-muted-foreground">
+            أطباء العيادة وخدماتها وأسعارها يقرأها المساعد الذكي مباشرةً من صفحتَي
+            «الموظفون» و«الخدمات» — لا حاجة لكتابتها هنا.
+          </p>
         </CardContent>
       </Card>
 
