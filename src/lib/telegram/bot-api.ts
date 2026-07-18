@@ -83,29 +83,43 @@ export async function getTelegramWebhookInfo(botToken: string) {
  * Point a clinic's Telegram bot at the shared n8n webhook so incoming messages
  * (and the reminder confirm/cancel callback buttons) actually reach n8n.
  * Without this, a saved bot token is inert — Telegram has nowhere to deliver
- * updates and the bot appears silent. Best-effort: throws on failure so the
- * caller can surface it, but callers treat it as non-blocking.
+ * updates and the bot appears silent. A transient failure here used to mean
+ * the bot stayed dead for up to 10 minutes until the auto-register cron's
+ * next run — retrying a couple of times inline closes almost all of that gap
+ * within the same request that saves the clinic's channel. Best-effort:
+ * throws on final failure so the caller can surface it, but callers treat it
+ * as non-blocking.
  */
 export async function registerTelegramWebhook(botToken: string) {
   const webhookUrl = telegramWebhookUrl(botToken);
 
-  const res = await fetch(
-    `https://api.telegram.org/bot${botToken}/setWebhook`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        url: webhookUrl,
-        allowed_updates: ["message", "callback_query"],
-        drop_pending_updates: true,
-      }),
+  let lastError: string | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
     }
-  );
-  const data = await res.json();
-
-  if (!res.ok || !data.ok) {
-    throw new Error(data?.description ?? "فشل تسجيل webhook تيليجرام");
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${botToken}/setWebhook`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: webhookUrl,
+            allowed_updates: ["message", "callback_query"],
+            drop_pending_updates: true,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        return data;
+      }
+      lastError = data?.description ?? "فشل تسجيل webhook تيليجرام";
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : "فشل تسجيل webhook تيليجرام";
+    }
   }
 
-  return data;
+  throw new Error(lastError ?? "فشل تسجيل webhook تيليجرام");
 }
