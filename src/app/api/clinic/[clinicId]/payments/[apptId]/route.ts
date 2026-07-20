@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireClinicMember } from "@/lib/auth/require-clinic-access";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { triggerPaymentReviewNotify } from "@/lib/n8n/webhooks";
 
 type RouteContext = { params: Promise<{ clinicId: string; apptId: string }> };
 
@@ -31,5 +32,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Tell the patient the outcome on the channel they paid from. Awaited —
+  // a serverless function can be frozen before an un-awaited request
+  // completes once the response is sent.
+  if (status === "paid" || status === "rejected") {
+    await triggerPaymentReviewNotify({
+      clinicId,
+      appointmentId: apptId,
+      decision: status,
+    });
+  }
+
   return NextResponse.json({ appointment: data });
 }
