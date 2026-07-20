@@ -40,16 +40,19 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Tell the patient the outcome on the channel they paid from. Awaited —
-  // a serverless function can be frozen before an un-awaited request
-  // completes once the response is sent.
+  // Tell the patient the outcome on the channel they paid from. The message
+  // is queued in the owner DB and delivered by the n8n worker (webhook poke
+  // for instant delivery + every-minute poll as the guarantee) — direct
+  // Vercel→n8n HTTP has proven unreachable in production, so the DB queue is
+  // the reliable transport.
   if (status === "paid" || status === "rejected") {
-    await triggerPaymentReviewNotify({
-      clinicId,
-      appointmentId: apptId,
+    await getAdminSupabase().from("notify_queue").insert({
+      clinic_id: clinicId,
+      appointment_id: apptId,
       decision: status,
-      note,
+      note: note || null,
     });
+    await triggerPaymentReviewNotify();
   }
 
   return NextResponse.json({ appointment: data });
