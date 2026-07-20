@@ -49,9 +49,11 @@ function weeklyBuckets(appointments: Appointment[]) {
     }).length;
 
     buckets.push({
-      week: new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(
-        start
-      ),
+      week: new Intl.DateTimeFormat("ar-SA", {
+        day: "numeric",
+        month: "short",
+        timeZone: "Asia/Riyadh",
+      }).format(start),
       count,
     });
   }

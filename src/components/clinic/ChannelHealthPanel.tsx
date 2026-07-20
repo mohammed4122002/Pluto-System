@@ -168,6 +168,7 @@ export function ChannelHealthPanel({ clinicId }: { clinicId: string }) {
               minute: "2-digit",
               day: "numeric",
               month: "short",
+              timeZone: "Asia/Riyadh",
             }).format(new Date(checkedAt))}
           </span>
         </p>

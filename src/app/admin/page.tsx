@@ -128,7 +128,7 @@ export default async function AdminOverviewPage() {
     ...(expiringSubs ?? []).map((s) => ({
       tone: "warning" as const,
       title: "اشتراك ينتهي قريباً",
-      description: `عيادة "${(s.clinic as { name?: string } | null)?.name ?? "—"}" — ينتهي بتاريخ ${new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "long" }).format(new Date(s.expires_at))}`,
+      description: `عيادة "${(s.clinic as { name?: string } | null)?.name ?? "—"}" — ينتهي بتاريخ ${new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "long", timeZone: "Asia/Riyadh" }).format(new Date(s.expires_at))}`,
     })),
     ...((errorsLast24h ?? 0) > 0
       ? [
@@ -157,6 +157,7 @@ export default async function AdminOverviewPage() {
           day: "numeric",
           month: "long",
           year: "numeric",
+          timeZone: "Asia/Riyadh",
         }).format(now)}
         actions={
           <Button asChild className="gap-2">

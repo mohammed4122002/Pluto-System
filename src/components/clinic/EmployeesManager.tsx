@@ -67,6 +67,7 @@ function fmtDate(d: string) {
     return new Intl.DateTimeFormat("ar-SA", {
       day: "numeric",
       month: "short",
+      timeZone: "Asia/Riyadh",
     }).format(new Date(d));
   } catch {
     return d;
