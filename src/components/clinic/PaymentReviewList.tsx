@@ -44,8 +44,10 @@ export function PaymentReviewList({
 }) {
   const [rows, setRows] = useState<PayRow[]>(initialRows);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
-  async function decide(id: string, status: "paid" | "rejected") {
+  async function decide(id: string, status: "paid" | "rejected", note?: string) {
     setBusyId(id);
     const prev = rows;
     setRows((r) => r.map((x) => (x.id === id ? { ...x, payment_status: status } : x)));
@@ -53,10 +55,16 @@ export function PaymentReviewList({
       const res = await fetch(`/api/clinic/${clinicId}/payments/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, note: note?.trim() || undefined }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "فشل الحفظ");
-      toast.success(status === "paid" ? "تم تأكيد الدفع ✅" : "تم رفض الدفع");
+      toast.success(
+        status === "paid"
+          ? "تم تأكيد الدفع وإبلاغ المريض ✅"
+          : "تم رفض الدفع وإبلاغ المريض"
+      );
+      setRejectingId(null);
+      setRejectNote("");
     } catch (e) {
       setRows(prev);
       toast.error(e instanceof Error ? e.message : "فشل الحفظ");
@@ -147,7 +155,10 @@ export function PaymentReviewList({
                     size="sm"
                     variant="outline"
                     className="text-destructive"
-                    onClick={() => decide(r.id, "rejected")}
+                    onClick={() => {
+                      setRejectingId(rejectingId === r.id ? null : r.id);
+                      setRejectNote("");
+                    }}
                     disabled={busyId === r.id}
                   >
                     <XCircle className="size-4" />
@@ -156,6 +167,46 @@ export function PaymentReviewList({
                 </>
               ) : null}
             </div>
+            {rejectingId === r.id && r.payment_status === "pending" ? (
+              <div className="w-full space-y-2 border-t border-border/70 pt-3">
+                <textarea
+                  value={rejectNote}
+                  onChange={(e) => setRejectNote(e.target.value)}
+                  rows={2}
+                  maxLength={1000}
+                  placeholder="رسالة للمريض (اختياري) — مثال: المبلغ في الصورة أقل من قيمة المقدّم، ياليت تعيد التحويل وترسل صورة جديدة. اتركها فارغة لإرسال رسالة الرفض الافتراضية."
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => decide(r.id, "rejected", rejectNote)}
+                    disabled={busyId === r.id}
+                  >
+                    {busyId === r.id ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <XCircle className="size-4" />
+                    )}
+                    رفض وإرسال الرسالة
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setRejectingId(null);
+                      setRejectNote("");
+                    }}
+                    disabled={busyId === r.id}
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         );
       })}

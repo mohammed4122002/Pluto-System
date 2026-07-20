@@ -37,6 +37,8 @@ export async function triggerPaymentReviewNotify(input: {
   clinicId: string;
   appointmentId: string;
   decision: "paid" | "rejected";
+  /** Optional staff-written message — sent to the patient as-is instead of the default text. */
+  note?: string;
 }) {
   try {
     await fetch(
@@ -49,6 +51,7 @@ export async function triggerPaymentReviewNotify(input: {
           clinic_id: input.clinicId,
           appointment_id: input.appointmentId,
           decision: input.decision,
+          note: input.note ?? "",
         }),
       }
     );
