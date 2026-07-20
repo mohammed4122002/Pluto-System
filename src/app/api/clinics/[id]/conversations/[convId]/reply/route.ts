@@ -37,7 +37,9 @@ export async function POST(request: Request, { params }: RouteContext) {
   // Clinic's own channel credentials (service-role read of the config view).
   const { data: config } = await admin
     .from("clinics_config")
-    .select("tg_bot_token, wa_phone_id, wa_access_token")
+    .select(
+      "tg_bot_token, wa_provider, wa_phone_id, wa_access_token, twilio_account_sid, twilio_auth_token, twilio_whatsapp_from"
+    )
     .eq("clinic_id", clinicId)
     .single();
 
@@ -47,8 +49,12 @@ export async function POST(request: Request, { params }: RouteContext) {
         channel: conversation.channel as "telegram" | "whatsapp",
         chat_ref: conversation.chat_ref,
         tg_bot_token: config?.tg_bot_token ?? null,
+        wa_provider: config?.wa_provider ?? null,
         wa_phone_id: config?.wa_phone_id ?? null,
         wa_access_token: config?.wa_access_token ?? null,
+        twilio_account_sid: config?.twilio_account_sid ?? null,
+        twilio_auth_token: config?.twilio_auth_token ?? null,
+        twilio_whatsapp_from: config?.twilio_whatsapp_from ?? null,
       },
       text
     );
