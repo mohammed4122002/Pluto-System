@@ -80,7 +80,10 @@ function ReviewSummary({ data }: { data: StepProps["data"] }) {
       <p className="font-medium">{data.name || "—"} · {data.doctor_name || "—"}</p>
       <p className="mt-1 text-muted-foreground">
         الخطة: {info.label} · الإجمالي: {info.totalSar} ر.س · ينتهي في{" "}
-        {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(expires)}
+        {new Intl.DateTimeFormat("ar-SA", {
+          dateStyle: "medium",
+          timeZone: "Asia/Riyadh",
+        }).format(expires)}
       </p>
     </div>
   );

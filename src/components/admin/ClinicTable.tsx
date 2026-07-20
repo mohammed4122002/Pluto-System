@@ -49,9 +49,10 @@ export function ClinicTable({ clinics }: { clinics: Clinic[] }) {
               <SubscriptionBadge status={clinic.status} />
             </TableCell>
             <TableCell dir="ltr" className="text-end">
-              {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
-                new Date(clinic.created_at)
-              )}
+              {new Intl.DateTimeFormat("ar-SA", {
+                dateStyle: "medium",
+                timeZone: "Asia/Riyadh",
+              }).format(new Date(clinic.created_at))}
             </TableCell>
             <TableCell>
               <ClinicActionsMenu clinic={clinic} />

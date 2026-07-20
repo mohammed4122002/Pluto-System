@@ -289,9 +289,11 @@ async function EmployeeSelfPanel({
               <div className="flex flex-wrap gap-1">
                 {myAbsences.map((a) => (
                   <Badge key={a.id} variant="outline" className="text-[10px]">
-                    {new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(
-                      new Date(a.absence_date)
-                    )}
+                    {new Intl.DateTimeFormat("ar-SA", {
+                      day: "numeric",
+                      month: "short",
+                      timeZone: "Asia/Riyadh",
+                    }).format(new Date(a.absence_date))}
                   </Badge>
                 ))}
               </div>

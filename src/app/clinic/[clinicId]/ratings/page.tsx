@@ -24,9 +24,10 @@ function maskPhone(phone?: string) {
 function monthlyTrend(reviews: Review[]) {
   const byMonth = new Map<string, { sum: number; count: number }>();
   for (const review of reviews) {
-    const key = new Intl.DateTimeFormat("ar-SA", { month: "short" }).format(
-      new Date(review.created_at)
-    );
+    const key = new Intl.DateTimeFormat("ar-SA", {
+      month: "short",
+      timeZone: "Asia/Riyadh",
+    }).format(new Date(review.created_at));
     const entry = byMonth.get(key) ?? { sum: 0, count: 0 };
     entry.sum += review.stars;
     entry.count += 1;
@@ -78,9 +79,10 @@ export default async function ClinicRatingsPage({
   const dist = distribution(reviews);
 
   const exportRows = reviews.map((r) => ({
-    date: new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
-      new Date(r.created_at)
-    ),
+    date: new Intl.DateTimeFormat("ar-SA", {
+      dateStyle: "medium",
+      timeZone: "Asia/Riyadh",
+    }).format(new Date(r.created_at)),
     stars: r.stars,
     phone: maskPhone(r.patient_phone),
     comment: r.comment ?? "",
@@ -181,9 +183,10 @@ export default async function ClinicRatingsPage({
                     </TableCell>
                     <TableCell className="max-w-sm truncate">{review.comment ?? "—"}</TableCell>
                     <TableCell dir="ltr" className="text-end">
-                      {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
-                        new Date(review.created_at)
-                      )}
+                      {new Intl.DateTimeFormat("ar-SA", {
+                        dateStyle: "medium",
+                        timeZone: "Asia/Riyadh",
+                      }).format(new Date(review.created_at))}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -81,9 +81,10 @@ export default async function SubscriptionsPage() {
                       </TableCell>
                       <TableCell dir="ltr" className="text-end">
                         <span className={isExpiringSoon ? "text-warning" : undefined}>
-                          {new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(
-                            expiresAt
-                          )}
+                          {new Intl.DateTimeFormat("ar-SA", {
+                            dateStyle: "medium",
+                            timeZone: "Asia/Riyadh",
+                          }).format(expiresAt)}
                         </span>
                       </TableCell>
                       <TableCell>

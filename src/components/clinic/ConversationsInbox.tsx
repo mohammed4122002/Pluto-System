@@ -30,6 +30,7 @@ function timeAr(iso: string) {
     minute: "2-digit",
     day: "numeric",
     month: "short",
+    timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 }
 

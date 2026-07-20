@@ -22,6 +22,7 @@ function dateAr(iso: string | null) {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 }
 
