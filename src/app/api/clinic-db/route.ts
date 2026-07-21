@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireOwner } from "@/lib/auth/require-owner";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { triggerEmployeeSync } from "@/lib/n8n/webhooks";
+import { triggerEmployeeSync, triggerSheetTabNormalize } from "@/lib/n8n/webhooks";
 
 export async function POST(request: Request) {
   const auth = await requireOwner();
@@ -38,6 +38,9 @@ export async function POST(request: Request) {
   // Awaited (not fire-and-forget) — a serverless function can be frozen
   // before an un-awaited request completes once the response is sent.
   if (dbConfig.db_type === "google_sheets" && dbConfig.gs_spreadsheet_id) {
+    // Normalize tab names first (الحجوزات → Appointments …) so the employee
+    // sync and all later syncs find the canonical tabs on their first run.
+    await triggerSheetTabNormalize();
     await triggerEmployeeSync();
   }
 
