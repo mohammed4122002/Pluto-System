@@ -48,14 +48,17 @@ export async function POST(request: Request) {
   const expires = new Date(starts_at);
   expires.setMonth(expires.getMonth() + planInfo.months);
 
-  const { data, error } = await getAdminSupabase()
+  const admin = getAdminSupabase();
+  const expiresStr = expires.toISOString().slice(0, 10);
+
+  const { data, error } = await admin
     .from("subscriptions")
     .insert({
       clinic_id,
       plan,
       price_sar: planInfo.totalSar,
       starts_at,
-      expires_at: expires.toISOString().slice(0, 10),
+      expires_at: expiresStr,
       payment_note,
     })
     .select()
@@ -63,6 +66,17 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Renewing instantly restores a clinic that was auto-suspended for expiry —
+  // don't make it wait for the hourly lifecycle cron.
+  if (new Date(`${expiresStr}T23:59:59Z`).getTime() >= Date.now()) {
+    await admin
+      .from("clinics")
+      .update({ status: "active", suspended_reason: null })
+      .eq("id", clinic_id)
+      .eq("status", "suspended")
+      .eq("suspended_reason", "subscription_expired");
   }
 
   return NextResponse.json({ subscription: data }, { status: 201 });

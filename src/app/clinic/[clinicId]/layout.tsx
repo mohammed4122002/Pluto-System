@@ -1,7 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { ClinicSidebar } from "@/components/clinic/ClinicSidebar";
+import { SubscriptionBanner } from "@/components/clinic/SubscriptionBanner";
 
 export default async function ClinicLayout({
   children,
@@ -29,18 +31,38 @@ export default async function ClinicLayout({
     redirect(`/clinic/${platformUser?.clinic_id ?? ""}`);
   }
 
-  const { data: clinic } = await supabase
-    .from("clinics")
-    .select("id")
-    .eq("id", clinicId)
-    .single();
+  // Admin client: clinic staff can't read subscriptions directly, and the
+  // banner must render regardless of RLS scope.
+  const admin = getAdminSupabase();
+  const [{ data: clinic }, { data: activeSub }] = await Promise.all([
+    admin
+      .from("clinics")
+      .select("id, status, suspended_reason")
+      .eq("id", clinicId)
+      .single(),
+    admin
+      .from("subscriptions")
+      .select("expires_at")
+      .eq("clinic_id", clinicId)
+      .eq("status", "active")
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (!clinic) notFound();
 
   return (
     <div className="flex h-full flex-1">
       <ClinicSidebar />
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      <main className="flex-1 overflow-y-auto p-6">
+        <SubscriptionBanner
+          clinicStatus={clinic.status as string}
+          suspendedReason={(clinic.suspended_reason as string | null) ?? null}
+          expiresAt={(activeSub?.expires_at as string | null) ?? null}
+        />
+        {children}
+      </main>
     </div>
   );
 }
