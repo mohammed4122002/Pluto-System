@@ -42,14 +42,57 @@ export function ClinicInfoForm({ clinic }: { clinic: Clinic }) {
           <Label htmlFor="city">المدينة</Label>
           <Input id="city" name="city" defaultValue={clinic.city ?? ""} />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="country">الدولة</Label>
+          <Input id="country" name="country" defaultValue={clinic.country ?? ""} />
+        </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="address">العنوان</Label>
           <Input id="address" name="address" defaultValue={clinic.address ?? ""} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">هاتف العيادة</Label>
-          <Input id="phone" name="phone" dir="ltr" defaultValue={clinic.phone ?? ""} />
+
+        {/* قسم التواصل — يُعرض للمرضى في الدليل ويستخدمه البوت عند الطلب */}
+        <div className="space-y-3 rounded-lg border border-border/70 bg-muted/30 p-4 sm:col-span-2">
+          <div>
+            <p className="text-sm font-semibold">وسائل التواصل</p>
+            <p className="text-xs text-muted-foreground">
+              تظهر للمرضى في دليل العيادات، ويشاركها المساعد الذكي عند طلب رقم العيادة أو حساباتها.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="phone">هاتف العيادة</Label>
+              <Input
+                id="phone"
+                name="phone"
+                dir="ltr"
+                placeholder="+9665XXXXXXXX"
+                defaultValue={clinic.phone ?? ""}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="instagram_url">رابط إنستغرام</Label>
+              <Input
+                id="instagram_url"
+                name="instagram_url"
+                dir="ltr"
+                placeholder="https://instagram.com/..."
+                defaultValue={clinic.instagram_url ?? ""}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="facebook_url">رابط فيسبوك</Label>
+              <Input
+                id="facebook_url"
+                name="facebook_url"
+                dir="ltr"
+                placeholder="https://facebook.com/..."
+                defaultValue={clinic.facebook_url ?? ""}
+              />
+            </div>
+          </div>
         </div>
+
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="ai_persona_gender">شخصية المساعد الذكي</Label>
           <select

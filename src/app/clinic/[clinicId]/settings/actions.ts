@@ -14,6 +14,12 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
   // of a silent no-op success.
   const gender = String(formData.get("ai_persona_gender") ?? "female");
 
+  const cleanUrl = (v: FormDataEntryValue | null) => {
+    const s = String(v ?? "").trim();
+    if (!s) return null;
+    return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+  };
+
   const { data, error } = await supabase
     .from("clinics")
     .update({
@@ -21,8 +27,11 @@ export async function updateClinicInfo(clinicId: string, formData: FormData) {
       doctor_name: String(formData.get("doctor_name") ?? "").trim(),
       specialty: String(formData.get("specialty") ?? "").trim() || null,
       city: String(formData.get("city") ?? "").trim() || null,
+      country: String(formData.get("country") ?? "").trim() || null,
       address: String(formData.get("address") ?? "").trim() || null,
       phone: String(formData.get("phone") ?? "").trim() || null,
+      instagram_url: cleanUrl(formData.get("instagram_url")),
+      facebook_url: cleanUrl(formData.get("facebook_url")),
       ai_persona_gender: gender === "male" ? "male" : "female",
     })
     .eq("id", clinicId)
