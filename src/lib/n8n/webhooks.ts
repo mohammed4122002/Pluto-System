@@ -23,6 +23,23 @@ export async function triggerEmployeeSync() {
 }
 
 /**
+ * Kick the sheet-tab normalizer right after a Sheets clinic is registered so
+ * non-canonical tab names (الحجوزات، الموظفين…) are renamed to the standard
+ * ones before the first sync runs. Best-effort — the 10-minute cron is the
+ * guarantee.
+ */
+export async function triggerSheetTabNormalize() {
+  try {
+    await fetch(
+      `${N8N_WEBHOOK_BASE_URL.replace(/\/$/, "")}/webhook/a9c3e7f1-normalize-tabs`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
+    );
+  } catch {
+    // Best-effort — the cron normalizes on its next tick.
+  }
+}
+
+/**
  * Poke the n8n payment-review-notify worker so it processes the notify_queue
  * immediately. The actual notification payload lives in the queue row the
  * caller inserted first — this call carries no data, so losing it costs at
