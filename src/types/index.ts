@@ -78,8 +78,11 @@ export interface Clinic {
   doctor_name: string;
   specialty?: string;
   city?: string;
+  country?: string | null;
   address?: string;
   phone?: string;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
   logo_url?: string;
   status: ClinicStatus;
   notes?: string;
