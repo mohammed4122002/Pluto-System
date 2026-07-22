@@ -53,16 +53,28 @@ select
   tg.is_enabled      as tg_enabled,
   c.specialty,
   c.city,
-  c.country,
   c.phone            as clinic_phone,
-  c.instagram_url,
-  c.facebook_url,
   c.ai_info_text,
   c.ai_persona_gender,
   ch.wa_provider,
   ch.twilio_account_sid,
   ch.twilio_auth_token,
-  ch.twilio_whatsapp_from
+  ch.twilio_whatsapp_from,
+  a.deposit_enabled,
+  a.deposit_amount,
+  (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'name_ar', pm.name_ar, 'name_en', pm.name_en, 'type', pm.type,
+      'account_ref', pm.account_ref, 'instructions', pm.instructions
+    ) order by pm.sort_order, pm.created_at)
+      filter (where pm.is_enabled and pm.show_in_bot), '[]'::jsonb)
+    from clinic_payment_methods pm where pm.clinic_id = c.id
+  ) as payment_methods,
+  -- new contact/social columns appended at the END (Postgres CREATE OR REPLACE
+  -- VIEW only allows adding columns after the existing ones).
+  c.country,
+  c.instagram_url,
+  c.facebook_url
 from clinics c
 left join clinic_channels ch on ch.clinic_id = c.id and ch.channel = 'whatsapp'
 left join clinic_channels tg on tg.clinic_id = c.id and tg.channel = 'telegram'
