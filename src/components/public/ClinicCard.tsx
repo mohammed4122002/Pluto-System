@@ -1,9 +1,7 @@
-import { CalendarCheck, MapPin, MessageCircle, Phone, Stethoscope } from "lucide-react";
+import { Clock, MapPin, MessageCircle, Phone, Stethoscope } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 
-// lucide-react dropped the Instagram/Facebook brand marks; small inline SVGs
-// keep them recognizable without an extra icon dependency.
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -34,7 +32,9 @@ export type PublicClinic = {
   instagram_url: string | null;
   facebook_url: string | null;
   logo_url: string | null;
-  whatsapp: string | null; // digits only, when a WhatsApp bot number exists
+  whatsapp: string | null;
+  working_hours_start?: string | null;
+  working_hours_end?: string | null;
 };
 
 const digits = (s: string | null) => (s ? s.replace(/\D/g, "") : "");
@@ -50,8 +50,9 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
   const initials = clinic.name.trim().slice(0, 2);
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-brand-sm transition-shadow hover:shadow-md">
-      <div className="flex items-start gap-3 p-4">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-brand-sm transition-all hover:shadow-lg hover:border-primary/30">
+      {/* رأس البطاقة - الاسم والطبيب والتخصص */}
+      <div className="flex items-start gap-3 p-4 pb-3">
         {clinic.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -65,10 +66,10 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-bold">{clinic.name}</h3>
-          <p className="truncate text-sm text-muted-foreground">{clinic.doctor_name}</p>
+          <h3 className="text-base font-bold leading-tight">{clinic.name}</h3>
+          <p className="text-sm text-muted-foreground">{clinic.doctor_name}</p>
           {clinic.specialty ? (
-            <Badge className="mt-1 gap-1 bg-primary/10 text-primary">
+            <Badge className="mt-1.5 gap-1 bg-primary/10 text-primary hover:bg-primary/20">
               <Stethoscope className="size-3" />
               {clinic.specialty}
             </Badge>
@@ -76,24 +77,41 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
         </div>
       </div>
 
+      {/* الموقع */}
       {(clinic.city || clinic.address) && (
-        <div className="flex items-start gap-1.5 px-4 pb-3 text-xs text-muted-foreground">
-          <MapPin className="mt-0.5 size-3.5 shrink-0" />
-          <span className="line-clamp-2">
-            {[clinic.address, clinic.city, clinic.country].filter(Boolean).join("، ")}
+        <div className="flex items-start gap-2 px-4 py-2 text-sm">
+          <MapPin className="mt-0.5 size-4 shrink-0 text-primary/60" />
+          <div className="min-w-0 flex-1">
+            {clinic.address && <div className="text-foreground font-medium truncate">{clinic.address}</div>}
+            {(clinic.city || clinic.country) && (
+              <div className="text-xs text-muted-foreground">
+                {[clinic.city, clinic.country].filter(Boolean).join("، ")}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ساعات العمل */}
+      {(clinic.working_hours_start || clinic.working_hours_end) && (
+        <div className="flex items-center gap-2 px-4 py-2 text-sm">
+          <Clock className="size-4 shrink-0 text-primary/60" />
+          <span className="text-foreground">
+            من {clinic.working_hours_start || "—"} إلى {clinic.working_hours_end || "—"}
           </span>
         </div>
       )}
 
+      {/* وسائل التواصل والزر */}
       <div className="mt-auto flex items-center gap-2 border-t border-border/60 p-3">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {clinic.instagram_url ? (
             <a
               href={clinic.instagram_url}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="إنستغرام"
-              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-pink-500/15 hover:text-pink-600"
+              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-pink-500/15 hover:text-pink-600"
             >
               <InstagramIcon className="size-4" />
             </a>
@@ -104,7 +122,7 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="فيسبوك"
-              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-blue-500/15 hover:text-blue-600"
+              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-blue-500/15 hover:text-blue-600"
             >
               <FacebookIcon className="size-4" />
             </a>
@@ -113,7 +131,7 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
             <a
               href={`tel:${clinic.phone}`}
               aria-label="اتصال"
-              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-emerald-500/15 hover:text-emerald-600"
+              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-emerald-500/15 hover:text-emerald-600"
             >
               <Phone className="size-4" />
             </a>
@@ -125,14 +143,13 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
             href={bookHref}
             target={waNumber ? "_blank" : undefined}
             rel="noopener noreferrer"
-            className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-all hover:shadow-md hover:opacity-90 active:scale-95"
           >
             {waNumber ? <MessageCircle className="size-4" /> : <Phone className="size-4" />}
-            احجز الآن
+            احجز
           </a>
         ) : (
-          <span className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-            <CalendarCheck className="size-4" />
+          <span className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
             قريباً
           </span>
         )}
