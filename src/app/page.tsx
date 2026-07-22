@@ -26,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PLANS } from "@/lib/pricing";
+import { FeaturedClinics } from "@/components/home/FeaturedClinics";
 
 const INTEGRATIONS = [
   { icon: MessageCircle, label: "WhatsApp Business" },
@@ -482,6 +483,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* ===== Featured Clinics ===== */}
+        <FeaturedClinics />
 
         {/* ===== How it works ===== */}
         <section id="how" className="scroll-mt-20 bg-muted/40">
