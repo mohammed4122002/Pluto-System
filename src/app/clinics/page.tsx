@@ -29,13 +29,14 @@ export default async function PublicClinicsPage() {
   const { data } = await admin
     .from("clinics")
     .select(
-      "id, name, doctor_name, specialty, city, country, address, phone, instagram_url, facebook_url, logo_url, status, channels:clinic_channels(channel, is_enabled, wa_provider, twilio_whatsapp_from)"
+      "id, name, doctor_name, specialty, city, country, address, phone, instagram_url, facebook_url, logo_url, status, channels:clinic_channels(channel, is_enabled, wa_provider, twilio_whatsapp_from), automation:clinic_automation(working_hours_start, working_hours_end)"
     )
     .in("status", ["trial", "active"])
     .order("name", { ascending: true });
 
   const clinics: PublicClinic[] = (data ?? []).map((c) => {
     const channels = (c.channels ?? []) as ChannelRow[];
+    const automation = Array.isArray(c.automation) ? c.automation[0] : c.automation;
     const wa = channels.find((ch) => ch.channel === "whatsapp" && ch.is_enabled);
     const waDigits = wa?.twilio_whatsapp_from
       ? wa.twilio_whatsapp_from.replace(/\D/g, "")
@@ -53,41 +54,63 @@ export default async function PublicClinicsPage() {
       facebook_url: (c.facebook_url as string | null) ?? null,
       logo_url: (c.logo_url as string | null) ?? null,
       whatsapp: waDigits || null,
+      working_hours_start: (automation?.working_hours_start as string | null) ?? null,
+      working_hours_end: (automation?.working_hours_end as string | null) ?? null,
     };
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/70">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* الرأس */}
+      <header className="border-b border-border/70 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link href="/" className="flex items-center gap-2 font-bold">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Stethoscope className="size-4" />
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm">
+              <Stethoscope className="size-5" />
             </span>
-            MediSync
+            <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">MediSync</span>
           </Link>
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             دخول العيادات
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold sm:text-3xl">دليل العيادات</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            اختر مدينتك لعرض العيادات القريبة منك، واحجز موعدك مباشرة عبر واتساب.
+      <main className="flex-1 mx-auto max-w-6xl w-full px-4 py-8 sm:py-12">
+        {/* صفحة البطل */}
+        <div className="mb-12 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
+            <span className="bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
+              اكتشف أفضل العيادات
+            </span>
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+            ابحث عن العيادة المناسبة حسب مدينتك وتخصصك، واحجز موعدك مباشرة بكل سهولة.
           </p>
+          <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground/80">
+            <div className="h-1 w-8 rounded-full bg-primary/40" />
+            <span className="font-medium">{clinics.length} عيادة متاحة الآن</span>
+            <div className="h-1 w-8 rounded-full bg-primary/40" />
+          </div>
         </div>
 
         {clinics.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/70 py-16 text-center text-sm text-muted-foreground">
-            لا توجد عيادات متاحة حالياً.
+          <div className="rounded-2xl border border-dashed border-border/50 bg-muted/20 py-16 px-4 text-center">
+            <Stethoscope className="mx-auto mb-4 size-10 text-muted-foreground/50" />
+            <h2 className="font-semibold text-foreground mb-2">لا توجد عيادات متاحة</h2>
+            <p className="text-sm text-muted-foreground">سيتم إضافة عيادات جديدة قريباً</p>
           </div>
         ) : (
           <ClinicDirectory clinics={clinics} />
         )}
       </main>
+
+      {/* الفوتر */}
+      <footer className="border-t border-border/70 mt-auto bg-card/30 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted-foreground">
+          <p>© 2026 MediSync. جميع الحقوق محفوظة.</p>
+        </div>
+      </footer>
     </div>
   );
 }
