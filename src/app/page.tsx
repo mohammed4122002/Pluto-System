@@ -154,9 +154,6 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="hidden text-muted-foreground sm:inline-flex">
-              <Link href="/clinics">دليل العيادات</Link>
-            </Button>
             <Button asChild variant="ghost" className="text-muted-foreground">
               <Link href="/login">دخول العيادات</Link>
             </Button>
