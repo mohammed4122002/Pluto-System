@@ -1,4 +1,4 @@
-import { Clock, MapPin, MessageCircle, Phone, Stethoscope } from "lucide-react";
+import { Clock, MapPin, MessageCircle, Phone, Stethoscope, Send } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +20,14 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
+function TelegramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.085 0-.128-.01l-.209-3.03 5.553-5.02c.242-.22-.054-.338-.375-.118l-6.869 4.332-2.97-.924c-.645-.203-.658-.645.135-.953l11.593-4.47c.54-.198 1.01.132.84.951z" />
+    </svg>
+  );
+}
+
 export type PublicClinic = {
   id: string;
   name: string;
@@ -33,6 +41,7 @@ export type PublicClinic = {
   facebook_url: string | null;
   logo_url: string | null;
   whatsapp: string | null;
+  telegram_bot_username?: string | null;
   working_hours_start?: string | null;
   working_hours_end?: string | null;
 };
@@ -105,13 +114,37 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
       {/* وسائل التواصل والزر */}
       <div className="mt-auto flex items-center gap-2 border-t border-border/60 p-3">
         <div className="flex items-center gap-1">
+          {waNumber ? (
+            <a
+              href={`https://wa.me/${waNumber}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="واتساب بوت"
+              title="تواصل عبر واتساب"
+              className="flex size-9 items-center justify-center rounded-full bg-green-50 text-green-600 transition-all hover:bg-green-100 hover:shadow-md dark:bg-green-950/30 dark:text-green-400"
+            >
+              <MessageCircle className="size-4.5" />
+            </a>
+          ) : null}
+          {clinic.telegram_bot_username ? (
+            <a
+              href={`https://t.me/${clinic.telegram_bot_username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="تليجرام بوت"
+              title="تواصل عبر تليجرام"
+              className="flex size-9 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-all hover:bg-blue-100 hover:shadow-md dark:bg-blue-950/30 dark:text-blue-400"
+            >
+              <TelegramIcon className="size-4.5" />
+            </a>
+          ) : null}
           {clinic.instagram_url ? (
             <a
               href={clinic.instagram_url}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="إنستغرام"
-              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-pink-500/15 hover:text-pink-600"
+              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-pink-500/15 hover:text-pink-600"
             >
               <InstagramIcon className="size-4" />
             </a>
@@ -122,7 +155,7 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="فيسبوك"
-              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-blue-500/15 hover:text-blue-600"
+              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-blue-500/15 hover:text-blue-600"
             >
               <FacebookIcon className="size-4" />
             </a>
@@ -131,21 +164,29 @@ export function ClinicCard({ clinic }: { clinic: PublicClinic }) {
             <a
               href={`tel:${clinic.phone}`}
               aria-label="اتصال"
-              className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-emerald-500/15 hover:text-emerald-600"
+              className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-emerald-500/15 hover:text-emerald-600"
             >
               <Phone className="size-4" />
             </a>
           ) : null}
         </div>
 
-        {bookHref ? (
+        {waNumber || clinic.telegram_bot_username ? (
           <a
-            href={bookHref}
-            target={waNumber ? "_blank" : undefined}
+            href={waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent("مرحباً، أريد حجز موعد 🌿")}` : `https://t.me/${clinic.telegram_bot_username}`}
+            target="_blank"
             rel="noopener noreferrer"
             className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-all hover:shadow-md hover:opacity-90 active:scale-95"
           >
-            {waNumber ? <MessageCircle className="size-4" /> : <Phone className="size-4" />}
+            {waNumber ? <MessageCircle className="size-4" /> : <Send className="size-4" />}
+            احجز
+          </a>
+        ) : clinic.phone ? (
+          <a
+            href={`tel:${clinic.phone}`}
+            className="ms-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-all hover:shadow-md hover:opacity-90 active:scale-95"
+          >
+            <Phone className="size-4" />
             احجز
           </a>
         ) : (

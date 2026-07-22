@@ -22,6 +22,8 @@ type ChannelRow = {
   is_enabled: boolean | null;
   wa_provider: string | null;
   twilio_whatsapp_from: string | null;
+  telegram_bot_token?: string | null;
+  telegram_bot_username?: string | null;
 };
 
 export default async function PublicClinicsPage() {
@@ -29,7 +31,7 @@ export default async function PublicClinicsPage() {
   const { data } = await admin
     .from("clinics")
     .select(
-      "id, name, doctor_name, specialty, city, country, address, phone, instagram_url, facebook_url, logo_url, status, channels:clinic_channels(channel, is_enabled, wa_provider, twilio_whatsapp_from), automation:clinic_automation(working_hours_start, working_hours_end)"
+      "id, name, doctor_name, specialty, city, country, address, phone, instagram_url, facebook_url, logo_url, status, channels:clinic_channels(channel, is_enabled, wa_provider, twilio_whatsapp_from, telegram_bot_token, telegram_bot_username), automation:clinic_automation(working_hours_start, working_hours_end)"
     )
     .in("status", ["trial", "active"])
     .order("name", { ascending: true });
@@ -38,6 +40,7 @@ export default async function PublicClinicsPage() {
     const channels = (c.channels ?? []) as ChannelRow[];
     const automation = Array.isArray(c.automation) ? c.automation[0] : c.automation;
     const wa = channels.find((ch) => ch.channel === "whatsapp" && ch.is_enabled);
+    const tg = channels.find((ch) => ch.channel === "telegram" && ch.is_enabled);
     const waDigits = wa?.twilio_whatsapp_from
       ? wa.twilio_whatsapp_from.replace(/\D/g, "")
       : "";
@@ -54,6 +57,7 @@ export default async function PublicClinicsPage() {
       facebook_url: (c.facebook_url as string | null) ?? null,
       logo_url: (c.logo_url as string | null) ?? null,
       whatsapp: waDigits || null,
+      telegram_bot_username: (tg?.telegram_bot_username as string | null) ?? null,
       working_hours_start: (automation?.working_hours_start as string | null) ?? null,
       working_hours_end: (automation?.working_hours_end as string | null) ?? null,
     };
