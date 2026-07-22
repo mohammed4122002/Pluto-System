@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { MapPin, Search, X } from "lucide-react";
 
 import { ClinicCard, type PublicClinic } from "./ClinicCard";
+import { FilterSelect } from "./FilterSelect";
 
 export function ClinicDirectory({ clinics }: { clinics: PublicClinic[] }) {
   const cities = useMemo(() => {
@@ -51,26 +52,17 @@ export function ClinicDirectory({ clinics }: { clinics: PublicClinic[] }) {
           </div>
 
           {/* فلتر المنطقة/المدينة */}
-          <div className="relative group">
-            <MapPin className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-5 text-primary/50 start-4 group-focus-within:text-primary transition-colors" />
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full appearance-none rounded-2xl border border-border/50 bg-background/50 py-3.5 ps-13 pe-12 text-sm outline-none transition-all hover:border-border/70 hover:bg-background focus-visible:border-primary/60 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/15 shadow-sm hover:shadow-md"
-            >
-              <option value="">كل المدن</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-4 text-primary/50 group-focus-within:text-primary transition-colors">
-              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
-          </div>
+          <FilterSelect
+            value={city}
+            onChange={setCity}
+            ariaLabel="فلترة حسب المدينة"
+            placeholder="كل المدن"
+            icon={MapPin}
+            options={[
+              { value: "", label: "كل المدن" },
+              ...cities.map((c) => ({ value: c, label: c })),
+            ]}
+          />
         </div>
 
         {/* شريط الفلاترز النشطة */}

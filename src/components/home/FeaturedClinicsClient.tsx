@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClinicCard, type PublicClinic } from "@/components/public/ClinicCard";
+import { FilterSelect } from "@/components/public/FilterSelect";
 
 export function FeaturedClinicsClient({ initialClinics }: { initialClinics: PublicClinic[] }) {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -47,25 +48,18 @@ export function FeaturedClinicsClient({ initialClinics }: { initialClinics: Publ
 
         {countries.length > 0 && (
           <div className="mt-8 flex justify-center">
-            <div className="relative inline-block">
-              <MapPin className="pointer-events-none absolute top-1/2 -translate-y-1/2 size-4 text-muted-foreground start-3" />
-              <select
+            <div className="w-full max-w-xs">
+              <FilterSelect
                 value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
-                className="appearance-none rounded-xl border border-border bg-background py-2.5 ps-10 pe-10 text-sm font-medium outline-none transition-colors hover:border-border/80 focus-visible:ring-2 focus-visible:ring-primary/30"
-              >
-                <option value="">كل الدول</option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 end-3 text-muted-foreground">
-                <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </div>
+                onChange={setSelectedCountry}
+                ariaLabel="فلترة حسب الدولة"
+                placeholder="كل الدول"
+                icon={MapPin}
+                options={[
+                  { value: "", label: "كل الدول" },
+                  ...countries.map((c) => ({ value: c, label: c })),
+                ]}
+              />
             </div>
           </div>
         )}
