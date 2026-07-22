@@ -26,7 +26,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PLANS } from "@/lib/pricing";
-import { FeaturedClinics } from "@/components/home/FeaturedClinics";
 
 const INTEGRATIONS = [
   { icon: MessageCircle, label: "WhatsApp Business" },
@@ -444,7 +443,7 @@ export default function LandingPage() {
         </section>
 
         {/* ===== Features ===== */}
-        <section id="features" className="scroll-mt-20">
+        <section id="features" className="scroll-mt-20 bg-muted/20">
           <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <Badge
@@ -480,9 +479,6 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-
-        {/* ===== Featured Clinics ===== */}
-        <FeaturedClinics />
 
         {/* ===== How it works ===== */}
         <section id="how" className="scroll-mt-20 bg-muted/40">
