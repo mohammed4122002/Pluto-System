@@ -55,7 +55,7 @@ export default async function ClinicLayout({
   return (
     <div className="flex h-full flex-1">
       <ClinicSidebar />
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto px-4 pb-6 pt-20 sm:px-6 lg:pt-6">
         <SubscriptionBanner
           clinicStatus={clinic.status as string}
           suspendedReason={(clinic.suspended_reason as string | null) ?? null}

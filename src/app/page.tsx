@@ -25,7 +25,13 @@ import { Button } from "@/components/ui/button";
 import { PLANS } from "@/lib/pricing";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { FeaturedClinicsClient } from "@/components/home/FeaturedClinicsClient";
+import { LandingMobileNav } from "@/components/home/LandingMobileNav";
 import type { PublicClinic } from "@/components/public/ClinicCard";
+
+// Reads a live sample of clinics for the featured section, so render on demand
+// (like /clinics) rather than prerendering — the build never needs a DB
+// connection, and the homepage always reflects the current clinics.
+export const dynamic = "force-dynamic";
 
 const INTEGRATIONS = [
   { icon: MessageCircle, label: "WhatsApp Business" },
@@ -194,7 +200,7 @@ export default async function LandingPage() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
             <Button asChild variant="ghost" className="text-muted-foreground">
               <Link href="/login">دخول العيادات</Link>
             </Button>
@@ -202,6 +208,8 @@ export default async function LandingPage() {
               <Link href="/login">ابدأ الآن</Link>
             </Button>
           </div>
+
+          <LandingMobileNav />
         </div>
       </header>
 

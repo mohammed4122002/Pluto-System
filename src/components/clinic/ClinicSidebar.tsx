@@ -18,6 +18,8 @@ import {
   Users,
   Stethoscope,
   UserCog,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -59,6 +61,18 @@ export function ClinicSidebar() {
   const base = `/clinic/${params.clinicId}`;
   const role = platformUser?.role ?? "secretary";
 
+  // Mobile drawer open/close. Each nav link closes it on tap (below) so a
+  // navigation never leaves the overlay covering the page.
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   // Live count of conversations the AI handed off to a human, so staff see
   // escalations from any page (not only when the inbox is open).
   const [attention, setAttention] = useState(0);
@@ -95,18 +109,60 @@ export function ClinicSidebar() {
   const initial = displayName.trim().charAt(0) || "ع";
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-e border-border/70 bg-card">
-      <div className="flex h-16 items-center gap-2.5 border-b border-border/70 px-5">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-brand ring-inset-highlight">
-          <MessageCircle className="size-4" />
-        </span>
-        <div className="leading-tight">
+    <>
+      {/* شريط علوي للجوال — يظهر فقط دون شاشات lg، ويحوي زر فتح القائمة */}
+      <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-card/95 px-4 backdrop-blur lg:hidden">
+        <div className="flex items-center gap-2">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-brand ring-inset-highlight">
+            <MessageCircle className="size-4" />
+          </span>
           <p className="text-sm font-extrabold tracking-tight">
             MediSync <span className="text-primary">AI</span>
           </p>
-          <p className="text-[11px] text-muted-foreground">{ROLE_LABEL_AR[role]}</p>
         </div>
-      </div>
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="فتح القائمة"
+          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
+      </header>
+
+      {/* الخلفية المعتمة عند فتح القائمة على الجوال */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 start-0 z-50 flex w-72 max-w-[85%] shrink-0 flex-col border-e border-border/70 bg-card shadow-brand-lg transition-transform duration-300 ease-in-out",
+          "lg:static lg:z-auto lg:w-64 lg:max-w-none lg:translate-x-0 lg:shadow-none",
+          open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        )}
+      >
+        <div className="flex h-16 items-center gap-2.5 border-b border-border/70 px-5">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-brand ring-inset-highlight">
+            <MessageCircle className="size-4" />
+          </span>
+          <div className="leading-tight">
+            <p className="text-sm font-extrabold tracking-tight">
+              MediSync <span className="text-primary">AI</span>
+            </p>
+            <p className="text-[11px] text-muted-foreground">{ROLE_LABEL_AR[role]}</p>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            aria-label="إغلاق القائمة"
+            className="ms-auto flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
         {NAV_ITEMS.filter((item) => item.roles.includes(role)).map((item) => {
@@ -116,6 +172,7 @@ export function ClinicSidebar() {
             <Link
               key={item.href}
               href={href}
+              onClick={() => setOpen(false)}
               className={cn(
                 "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
                 isActive
@@ -166,6 +223,7 @@ export function ClinicSidebar() {
           </Tooltip>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
